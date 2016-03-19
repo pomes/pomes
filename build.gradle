@@ -1,17 +1,64 @@
-subprojects {
-    apply plugin: 'idea'
-    apply plugin: 'groovy'
-
-    group = 'com.github.pomes'
-    version = '0.1.0'
-
+allprojects {
     repositories {
         jcenter()
     }
 
-    dependencies {
-        compile 'org.codehaus.groovy:groovy-all:2.4.5'
+    version = '0.1.0-SNAPSHOT'
 
-        testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+
+    project.ext {
+        groovyVersion = '2.4.6'
+        spockVersion = '1.0-groovy-2.4'
+        gradleVersion = '2.12'
+        codeNarcVersion = '0.25.1'
+    }
+}
+
+group = 'com.github.pomes'
+description = 'Base project for Pomes'
+wrapper.gradleVersion = gradleVersion
+
+project.ext {
+    codeNarcFile = file('config/codenarc/ruleset.groovy')
+    codeNarcTestFile = file('config/codenarc/ruleset-test.groovy')
+}
+
+subprojects {
+    apply plugin: 'groovy'
+
+    apply plugin: 'build-dashboard'
+    apply plugin: 'project-report'
+    apply plugin: 'codenarc'
+    apply plugin: 'jacoco'
+
+    sourceCompatibility = 1.8
+
+    dependencies {
+        compile "org.codehaus.groovy:groovy-all:$groovyVersion"
+
+        testCompile "org.spockframework:spock-core:$spockVersion"
+    }
+
+    codenarc {
+        toolVersion = "$codeNarcVersion"
+
+        codenarcMain {
+            configFile codeNarcFile
+            exclude "**/package-info.*"
+            ignoreFailures true
+            maxPriority1Violations 0
+            maxPriority2Violations 10
+            maxPriority3Violations 20
+        }
+
+        codenarcTest {
+            ignoreFailures true
+            configFile codeNarcTestFile
+            maxPriority1Violations 0
+            maxPriority2Violations 10
+            maxPriority3Violations 20
+        }
     }
 }
