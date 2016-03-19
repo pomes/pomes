@@ -1,4 +1,4 @@
-group = 'com.github.pomes'
+group = 'com.github.pomes.core'
 version = '0.1.0'
 
 dependencies {
