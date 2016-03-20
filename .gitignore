@@ -151,3 +151,5 @@ nb-configuration.xml
 .nb-gradle/
 
 !gradle/wrapper/gradle-wrapper.jar
+
+*.secret

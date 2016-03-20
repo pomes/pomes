@@ -13,15 +13,25 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+apply plugin: 'codenarc'
+codenarc {
+    toolVersion = "$codeNarcVersion"
 
-package com.github.pomes.cli
+    codenarcMain {
+        configFile file("$rootProject.projectDir/config/codenarc/ruleset.groovy")
+        exclude "**/package-info.*"
+        ignoreFailures true
+        maxPriority1Violations 0
+        maxPriority2Violations 10
+        maxPriority3Violations 20
+    }
 
-class Cli {
-    static void main(String[] args) {
-        def cli = new CliArgs()
-        if (cli.parse(args))
-            cli.handleRequest()
-        else
-            println cli.getCommandUsage()
+    codenarcTest {
+        ignoreFailures true
+        configFile file("$rootProject.projectDir/config/codenarc/ruleset-test.groovy")
+        maxPriority1Violations 0
+        maxPriority2Violations 10
+        maxPriority3Violations 20
     }
 }
+

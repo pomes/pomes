@@ -1,8 +1,10 @@
 apply plugin: 'application'
 
+description = 'The command line tool for Pomes'
+
 mainClassName = 'com.github.pomes.cli.Cli'
 
 dependencies {
-    compile project(':core')
+    compile project(':pomes-core')
     compile 'com.beust:jcommander:1.48'
 }

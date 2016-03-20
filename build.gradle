@@ -1,64 +1,86 @@
+plugins {
+    id 'idea'
+    id 'eclipse'
+}
+
 allprojects {
     repositories {
         jcenter()
     }
 
+    group = 'com.github.pomes'
     version = '0.1.0-SNAPSHOT'
+    status = 'SNAPSHOT'
 
-    apply plugin: 'idea'
-    apply plugin: 'eclipse'
-
-    project.ext {
+    ext {
         groovyVersion = '2.4.6'
         spockVersion = '1.0-groovy-2.4'
         gradleVersion = '2.12'
         codeNarcVersion = '0.25.1'
+        url = 'https://github.com/pomes/pomes'
+        inceptionYear = '2016'
+        parentProject = project(':pomes-parent')
+        licenses = [
+                [name        : 'The Apache Software License, Version 2.0',
+                url         : 'http://www.apache.org/licenses/LICENSE-2.0.txt',
+                distribution: 'repo']
+        ]
+        scm = [
+                url                : 'https://github.com/pomes/pomes.git',
+                connection         : 'scm:git:https://github.com/pomes/pomes.git',
+                developerConnection: 'scm:git:https://github.com/pomes/pomes.git'
+        ]
+        issueManagement = [
+                system: 'GitHub',
+                url   : 'https://github.com/pomes/pomes/issues'
+        ]
+
+        ciManagement = [
+                system: 'TravisCI',
+                url   : 'https://travis-ci.org/pomes/pomes'
+        ]
+        developers = [
+                'dedickinson': [
+                        name : 'Duncan Dickinson',
+                        email: 'duncan@dickinson.name',
+                        url  : 'http://www.duncan.dickinson.name',
+                        roles: ['Developer']
+                ]
+        ]
     }
 }
 
-group = 'com.github.pomes'
 description = 'Base project for Pomes'
 wrapper.gradleVersion = gradleVersion
 
-project.ext {
-    codeNarcFile = file('config/codenarc/ruleset.groovy')
-    codeNarcTestFile = file('config/codenarc/ruleset-test.groovy')
+subprojects {
+    apply from: "$rootProject.projectDir/gradle/pom.gradle"
 }
 
-subprojects {
+configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli'] }) {
     apply plugin: 'groovy'
-
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'
-    apply plugin: 'codenarc'
     apply plugin: 'jacoco'
 
     sourceCompatibility = 1.8
 
     dependencies {
         compile "org.codehaus.groovy:groovy-all:$groovyVersion"
-
         testCompile "org.spockframework:spock-core:$spockVersion"
     }
 
-    codenarc {
-        toolVersion = "$codeNarcVersion"
+    apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
 
-        codenarcMain {
-            configFile codeNarcFile
-            exclude "**/package-info.*"
-            ignoreFailures true
-            maxPriority1Violations 0
-            maxPriority2Violations 10
-            maxPriority3Violations 20
-        }
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
 
-        codenarcTest {
-            ignoreFailures true
-            configFile codeNarcTestFile
-            maxPriority1Violations 0
-            maxPriority2Violations 10
-            maxPriority3Violations 20
-        }
+    task groovydocJar(type: Jar, dependsOn: groovydoc) {
+        classifier = 'javadoc'
+        from groovydoc.destinationDir
     }
 }
+
+apply from: "$rootProject.projectDir/gradle/publish.gradle"

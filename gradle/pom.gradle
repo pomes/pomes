@@ -1,0 +1,84 @@
+/*
+ *    Copyright 2016 Duncan Dickinson
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+
+ext.buildPom = {
+    def builder = new NodeBuilder()
+    builder.pom {
+        if (project != parentProject) {
+            project(':pomes-parent').with {
+                parent {
+                    groupId group
+                    artifactId name
+                    delegate.invokeMethod('version', version)
+                }
+            }
+        }
+        delegate.invokeMethod('description', project.description)
+        url ext.url
+
+        inceptionYear ext.inceptionYear
+
+        licenses {
+            ext.licenses.each { l ->
+                license {
+                    name l.name
+                    url l.url
+                    distribution l.distribution
+                }
+            }
+        }
+
+        developers {
+            ext.developers.each { devId, dev ->
+                developer {
+                    id devId
+                    name dev.name
+                    email dev.email
+                    url dev.url
+                    roles {
+                        dev.roles.each {
+                            role 'Developer'
+                        }
+                    }
+                }
+            }
+        }
+
+        scm {
+            connection ext.scm.connection
+            developerConnection ext.scm.developerConnection
+            url ext.scm.url
+        }
+
+        issueManagement {
+            system ext.issueManagement.system
+            url ext.issueManagement.url
+        }
+
+        ciManagement {
+            system ext.ciManagement.system
+            url ext.ciManagement.url
+        }
+    }
+}
+
+task('displayBasePomInfo') << {
+    def writer = new StringWriter()
+    buildPom().print(new PrintWriter(writer))
+    print writer
+}
+
