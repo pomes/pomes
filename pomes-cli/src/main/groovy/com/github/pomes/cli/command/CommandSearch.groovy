@@ -24,7 +24,7 @@ import com.github.pomes.core.query.RepositoryWebQueryResult
 import groovy.util.logging.Slf4j
 
 @Slf4j
-@Parameters(commandNames = ['search'], commandDescription = "Searches for a library using search text or coordinates")
+@Parameters(commandNames = ['search'], commandDescription = "(Web) Searches for an artifact using search text or coordinates")
 class CommandSearch implements Command {
 
     @Parameter(description = '<search text>')

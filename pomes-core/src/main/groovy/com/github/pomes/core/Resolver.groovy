@@ -135,6 +135,10 @@ class Resolver {
         return getVersionRangeResult(artifact, version).versions
     }
 
+    List<Version> getArtifactVersions(ArtifactCoordinate coordinate, String version = '[0,)') {
+        return getVersionRangeResult(coordinate.artifact, version).versions
+    }
+
     /**
      *
      * @param groupId
@@ -154,6 +158,13 @@ class Resolver {
     String getArtifactLatestVersion(Artifact artifact) {
         log.debug "Determing latest version of $artifact"
         return getVersionRangeResult(artifact).highestVersion.toString()
+    }
+
+    String getArtifactLatestVersion(ArtifactCoordinate coordinate) {
+        if (!coordinate.version)
+            getArtifactLatestVersion(coordinate.copyWith(version: ArtifactCoordinate.VERSION_OPEN))
+        else
+            getArtifactLatestVersion(coordinate.artifact)
     }
 
     /**

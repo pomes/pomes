@@ -26,8 +26,8 @@ import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.version.Version
 
 @Slf4j
-@Parameters(commandNames = ['info'], commandDescription = "Gets information about an artifact")
-class CommandInfo implements Command {
+@Parameters(commandNames = ['query'], commandDescription = "Queries a maven repository regarding an artifact")
+class CommandQuery implements Command {
     @Parameter(description = '<coordinates>')
     List<String> coordinates
 
@@ -37,8 +37,29 @@ class CommandInfo implements Command {
     @Override
     void handleRequest(Searcher searcher, Resolver resolver) {
         coordinates.each { coordinate ->
-            log.debug "Info request for $coordinate (latest requested: $latest)"
+            log.debug "Query request for $coordinate (latest requested: $latest)"
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
+
+            if (latest) {
+                ac = ac.copyWith(version: resolver.getArtifactLatestVersion(ac))
+            }
+
+            if (ac.version) {
+                List<Artifact> artifacts = resolver.getClassifiersAndExtensions(ac)
+
+                println "${artifacts.size()} available classifiers and extensions for $ac"
+                artifacts.each { artifact ->
+                    println " - $artifact - classifier:'${artifact.classifier}' extension:'${artifact.extension}'"
+                }
+            } else {
+                ac = ac.copyWith(version: ArtifactCoordinate.VERSION_OPEN)
+                List<Version> versions = resolver.getArtifactVersions(ac)
+                println "${versions.size()} available versions for $ac"
+                versions.each { version ->
+                    println " - $version"
+                }
+                println "Latest version is: ${resolver.getArtifactLatestVersion(ac)}"
+            }
         }
     }
 }

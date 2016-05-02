@@ -21,6 +21,7 @@ enum CliCommands {
     SEARCH('search'),
     GET('get'),
     INFO('info'),
+    QUERY('query'),
     REPO('repo')
 
     final String name

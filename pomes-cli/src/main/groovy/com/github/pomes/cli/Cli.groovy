@@ -6,6 +6,7 @@ import com.beust.jcommander.Parameter
 import com.github.pomes.cli.command.CommandGet
 import com.github.pomes.cli.command.CommandHelp
 import com.github.pomes.cli.command.CommandInfo
+import com.github.pomes.cli.command.CommandQuery
 import com.github.pomes.cli.command.CommandRepo
 import com.github.pomes.cli.command.CommandSearch
 import com.github.pomes.core.Resolver
@@ -47,6 +48,7 @@ class Cli {
     def commandRepo = new CommandRepo()
     def commandGet = new CommandGet()
     def commandInfo = new CommandInfo()
+    def commandQuery = new CommandQuery()
 
     Cli(){
         searcher = new Searcher(new JCenter())
@@ -61,6 +63,7 @@ class Cli {
         jc.programName = 'pomes'
         jc.addCommand commandHelp
         jc.addCommand commandSearch
+        jc.addCommand commandQuery
         jc.addCommand commandInfo
         jc.addCommand commandGet
         jc.addCommand commandRepo
@@ -116,6 +119,9 @@ class Cli {
                         commandSearch.handleRequest(searcher, resolver)
                     else
                         println "Incorrect usage: ${commandSearch.usage}"
+                    break
+                case CliCommands.QUERY.name:
+                    commandQuery.handleRequest(searcher, resolver)
                     break
                 case CliCommands.INFO.name:
                     commandInfo.handleRequest(searcher, resolver)

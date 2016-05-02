@@ -50,6 +50,12 @@ class ArtifactCoordinate {
     }
 
     Artifact getArtifact() {
+        if (!extension)
+            return new DefaultArtifact(toString())
+
+        if (!classifier)
+            return new DefaultArtifact(groupId, artifactId, extension, version)
+
         return new DefaultArtifact(groupId, artifactId, classifier, extension, version)
     }
 
@@ -62,10 +68,10 @@ class ArtifactCoordinate {
      * @return
      */
     static ArtifactCoordinate parseCoordinates(String coordinate) {
-        log.debug "Instantiating new Artifact from $coordinate"
+        log.debug "Instantiating new ArtifactCoordinate from $coordinate"
 
         String groupId, artifactId, version, extension, classifier
-        (groupId, artifactId, version, extension, classifier) = ['', '', '', null, '']
+        (groupId, artifactId, version, extension, classifier) = ['', '', '', '', '']
 
         Matcher matcher = COORDINATE_PATTERN.matcher(coordinate)
 
@@ -78,18 +84,27 @@ class ArtifactCoordinate {
 
         switch (coordinate.count(':')) {
             case 2:
+                //Normal GAV
                 version = matcher.group(COORDINATE_PATTERN_POS_3)
                 break
             case 3:
+                //GAV + extension
                 extension = matcher.group(COORDINATE_PATTERN_POS_3)
                 version = matcher.group(COORDINATE_PATTERN_POS_4)
                 break
             case 4:
+                //GAV + extension + classifier
                 extension = matcher.group(COORDINATE_PATTERN_POS_3)
                 classifier = matcher.group(COORDINATE_PATTERN_POS_4)
                 version = matcher.group(COORDINATE_PATTERN_POS_5)
                 break
         }
-        return new ArtifactCoordinate(groupId, artifactId, version, extension, classifier)
+
+        //Just assume we're after the POM
+        //if (!extension) extension = ArtifactExtension.POM.value
+
+        ArtifactCoordinate ac = new ArtifactCoordinate(groupId, artifactId, version, extension, classifier)
+        log.debug "New ArtifactCoordinate from $coordinate: $ac"
+        return ac
     }
 }
