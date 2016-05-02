@@ -16,16 +16,27 @@
 
 package com.github.pomes.core
 
-import groovy.transform.Immutable
-
 /**
- * A simple bean to normalize search results
+ * The possible maven classifier types ala "-Dpackaging="
+ *  <li>{@link #POM}</li>
+ *  <li>{@link #JAR}</li>
+ *  <li>{@link #WAR}</li>
+ *  <li>{@link #EAR}</li>
  */
-@Immutable
-class RepositoryWebQueryResult {
-    String artifactId
-    String groupId
-    String description
-    List<String> versions
-    String latestVersion
+enum ArtifactExtension {
+    POM('pom'),
+    JAR('jar'),
+    WAR('war'),
+    EAR('ear')
+
+    String value
+
+    ArtifactExtension(String val) {
+        value = val
+    }
+
+    @Override
+    public String toString() {
+        value
+    }
 }

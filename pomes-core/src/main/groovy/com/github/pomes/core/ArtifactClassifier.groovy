@@ -16,11 +16,14 @@
 
 package com.github.pomes.core
 
+/**
+ * Some of the possible maven classifier types ala "-Dclassifier="
+ *  <li>{@link #JAVADOC}</li>
+ *  <li>{@link #SOURCES}</li>
+ */
 enum ArtifactClassifier {
-    POM('pom'),
-    JAR('jar'),
-    WAR('war'),
-    EAR('ear')
+    JAVADOC('javadoc'),
+    SOURCES('sources')
 
     String value
 

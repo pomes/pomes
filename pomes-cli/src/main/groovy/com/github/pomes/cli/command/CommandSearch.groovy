@@ -18,9 +18,14 @@ package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
+import com.github.pomes.core.Resolver
+import com.github.pomes.core.Searcher
+import com.github.pomes.core.query.RepositoryWebQueryResult
+import groovy.util.logging.Slf4j
 
+@Slf4j
 @Parameters(commandNames = ['search'], commandDescription = "Searches for a library using search text or coordinates")
-class CommandSearch {
+class CommandSearch implements Command {
 
     @Parameter(description = '<search text>')
     List<String> queryText
@@ -41,11 +46,24 @@ class CommandSearch {
         queryText.join ' '
     }
 
-    def performSearch() {
+    @Override
+    void handleRequest(Searcher searcher, Resolver resolver) {
+        List<RepositoryWebQueryResult> results
         if (queryText) {
-            println "Searching for: $queryText"
+            results = searcher.search(queryText)
+            log.debug "Search for $queryText yielded ${results.size()} results"
         } else {
-            println "Searching for: $groupId:$artifactId"
+            results = searcher.search(groupId,artifactId)
+            log.debug "Search for $groupId:$artifactId yielded ${results.size()} results"
+        }
+
+        if (results) {
+            println "Result count: ${results.size()}"
+            results.each {
+                println " - ${it.toString()}"
+            }
+        } else {
+            println "No results"
         }
     }
 }

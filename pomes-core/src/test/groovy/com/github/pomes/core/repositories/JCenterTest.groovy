@@ -19,7 +19,7 @@ package com.github.pomes.core.repositories
 import co.freeside.betamax.Betamax
 import co.freeside.betamax.Recorder
 import co.freeside.betamax.TapeMode
-import com.github.pomes.core.RepositoryWebQueryResult
+import com.github.pomes.core.query.RepositoryWebQueryResult
 import groovy.util.logging.Slf4j
 import org.eclipse.aether.repository.RemoteRepository
 import org.junit.Rule

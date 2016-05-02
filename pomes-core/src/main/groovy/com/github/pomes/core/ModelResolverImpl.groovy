@@ -33,7 +33,7 @@ import org.eclipse.aether.resolution.ArtifactRequest
 import org.eclipse.aether.resolution.ArtifactResult
 
 /**
- * Implementation of the ModelResolver interface
+ * Implementation of the {@link org.apache.maven.model.resolution.ModelResolver} interface
  */
 public class ModelResolverImpl
         implements ModelResolver {

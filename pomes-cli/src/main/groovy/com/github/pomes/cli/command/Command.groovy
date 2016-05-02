@@ -14,23 +14,11 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli
+package com.github.pomes.cli.command
 
-enum CliCommands {
-    HELP('help'),
-    SEARCH('search'),
-    GET('get'),
-    INFO('info'),
-    REPO('repo')
+import com.github.pomes.core.Resolver
+import com.github.pomes.core.Searcher
 
-    final String name
-
-    CliCommands(String name) {
-        this.name = name
-    }
-
-    @Override
-    public String toString() {
-        return name
-    }
+interface Command {
+    void handleRequest(Searcher searcher, Resolver resolver)
 }

@@ -16,8 +16,9 @@
 
 package com.github.pomes.core.repositories
 
-import com.github.pomes.core.RepositoryWebQueryResult
+import com.github.pomes.core.query.RepositoryWebQueryResult
 import groovy.json.JsonSlurper
+import groovy.transform.ToString
 import groovy.util.logging.Slf4j
 import org.eclipse.aether.repository.RemoteRepository
 
@@ -30,7 +31,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE
  * @see <a href="https://bintray.com/docs/api/#_maven_package_search">Bintray API</a>
  */
 @Slf4j
-final class JCenter implements RepositoryQuery {
+@ToString
+final class JCenter implements RepositorySearcher {
     static final String id = 'jcenter'
     static final URL url = 'http://jcenter.bintray.com/'.toURL()
     static final String repositoryType = 'default'
@@ -47,6 +49,7 @@ final class JCenter implements RepositoryQuery {
                         target(apiUrl.toURI()).
                         queryParam('q', "$query").
                         request(APPLICATION_JSON_TYPE).get(String)
+        log.debug "JCenter result for $query: $json"
         def slurper = new JsonSlurper()
         mapQueryResults slurper.parseText(json)
     }
@@ -55,9 +58,10 @@ final class JCenter implements RepositoryQuery {
         def json =
                 newClient().
                         target(apiUrl.toURI()).
-                        queryParam('g', "$group").
-                        queryParam('a', "$artifact").
+                        queryParam('g', "$groupId").
+                        queryParam('a', "$artifactId").
                         request(APPLICATION_JSON_TYPE).get(String)
+        log.debug "JCenter result for $groupId:$artifactId: $json"
         def slurper = new JsonSlurper()
         mapQueryResults slurper.parseText(json)
     }
@@ -65,15 +69,20 @@ final class JCenter implements RepositoryQuery {
     private List<RepositoryWebQueryResult> mapQueryResults(List queryResults) {
         List<RepositoryWebQueryResult> results = []
         queryResults.each { Map result ->
-            def coordinates = result.name.tokenize(':')
+            log.debug "Adding result: ${result.system_ids[0]}"
+            def coordinates = result.system_ids[0].tokenize(':')
             results << new RepositoryWebQueryResult(
-                    artifactId: coordinates[0],
-                    groupId: coordinates[1],
-                    description: result.desc,
+                    groupId: coordinates[0],
+                    artifactId: coordinates[1],
+                    description: result.desc?.replaceAll(/(\r\n|\r|\n)/, '') ,
                     versions: result.versions,
                     latestVersion: result.latest_version)
         }
         return results
+    }
+
+    RepositorySearcher copy() {
+        return new JCenter()
     }
 
 }

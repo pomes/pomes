@@ -14,23 +14,17 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli
+package com.github.pomes.core.repositories
 
-enum CliCommands {
-    HELP('help'),
-    SEARCH('search'),
-    GET('get'),
-    INFO('info'),
-    REPO('repo')
+import spock.lang.Specification
 
-    final String name
+import java.nio.file.Paths
 
-    CliCommands(String name) {
-        this.name = name
-    }
+class DefaultLocalRepositoryTest extends Specification {
 
-    @Override
-    public String toString() {
-        return name
+    def "Verify DefaultLocalRepository base directory"() {
+        expect:
+        String homeDir = System.getProperty('user.home')
+        DefaultLocalRepository.baseDir == Paths.get(homeDir, '.pomes', 'repository')
     }
 }

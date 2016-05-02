@@ -23,17 +23,44 @@ import org.eclipse.aether.repository.RemoteRepository
 import java.nio.file.Path
 import java.nio.file.Paths
 
+/**
+ * An easy option for a LocalRepository instance: ~/.pomes/repository.
+ *
+ * Limitation: As this uses the user's home dir as a base this isn't useful for implementations
+ * that may have multiple users needing their own local repo. You'll need to create your own
+ * LocalRepository.
+ */
 @Slf4j
 final class DefaultLocalRepository {
+    /**
+     * The Path to the default local repo.
+     */
     static final Path baseDir
-    static final String repositoryType = 'local'
+
+    /**
+     * I'm not really sure about Aether's use of this.
+     */
+    static final String repositoryType = null
+
+    /**
+     * An instance of the repository that could be used instead of creating a new instance
+     * with {@link #newLocalRepository()}.
+     */
     static final LocalRepository repository
 
     static {
-        baseDir = Paths.get(System.getProperty('user.home'))
+        /*
+         * I've used ~/.pomes/repository instead of ~/.m2/repository so there's no cross-over
+         * with the default Maven setup.
+         */
+        baseDir = Paths.get(System.getProperty('user.home'), '.pomes', 'repository')
         repository = new LocalRepository(baseDir.toFile(), repositoryType)
     }
 
+    /**
+     * Use instead of {@link #repository} if you need a new instance
+     * @return a LocalRepository instance using a default local repo definition
+     */
     static LocalRepository newLocalRepository() {
         new LocalRepository(baseDir, repositoryType)
     }

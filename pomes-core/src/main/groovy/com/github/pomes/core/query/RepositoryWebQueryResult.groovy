@@ -14,23 +14,23 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli
+package com.github.pomes.core.query
 
-enum CliCommands {
-    HELP('help'),
-    SEARCH('search'),
-    GET('get'),
-    INFO('info'),
-    REPO('repo')
+import groovy.transform.Immutable
 
-    final String name
-
-    CliCommands(String name) {
-        this.name = name
-    }
+/**
+ * A simple bean to normalize search results
+ */
+@Immutable
+class RepositoryWebQueryResult {
+    String groupId
+    String artifactId
+    String description
+    List<String> versions
+    String latestVersion
 
     @Override
-    public String toString() {
-        return name
+    String toString() {
+        "$groupId:$artifactId $versions ($latestVersion) - $description"
     }
 }

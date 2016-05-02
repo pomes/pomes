@@ -54,14 +54,33 @@ import org.eclipse.aether.version.Version
  */
 @Slf4j
 class Resolver {
-    private final LocalRepository localRepository
-    private final List<RemoteRepository> remoteRepositories
-    private final RepositorySystem repositorySystem
-    private final RepositorySystemSession repositorySession
+    /**
+     * This is most likely pointing to a local directory
+     */
+    final LocalRepository localRepository
 
+    /**
+     * A list of remote Maven repositories
+     */
+    final List<RemoteRepository> remoteRepositories
 
+    /**
+     *
+     */
+    final RepositorySystem repositorySystem
+
+    /**
+     *
+     */
+    final RepositorySystemSession repositorySession
+
+    /**
+     * Prepares the instance by preparing a RepositorySystem instance and a RepositorySystemSession
+     * @param remoteRepositories the list of remote repos. Default is a single item {@link com.github.pomes.core.repositories.JCenter}
+     * @param localRepository is the local repo location. Default is {@link com.github.pomes.core.repositories.DefaultLocalRepository}
+     */
     Resolver(List<RemoteRepository> remoteRepositories = [JCenter.newJCenterRemoteRepository()],
-             LocalRepository localRepository = DefaultLocalRepository.newLocalRepository()) {
+             LocalRepository localRepository = DefaultLocalRepository.repository) {
 
         this.localRepository = localRepository
         this.remoteRepositories = remoteRepositories.asImmutable()
@@ -79,24 +98,62 @@ class Resolver {
                 repositorySystem.newLocalRepositoryManager(repositorySession, localRepository)
     }
 
-    VersionRangeResult getVersionRangeResult(Artifact artifact, String version = '[0,)', String classifier = ArtifactClassifier.POM) {
+    /**
+     * Used to determine version range for an artifact
+     *
+     * @param artifact The artifact for which we wish to determine possible versions
+     * @param version the version specifier
+     * @param extension the desired file extension (e.g. 'pom')
+     * @return the matching versions
+     *
+     * @see <a href="https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification">Version requirement
+     *  specification</a>
+     */
+    VersionRangeResult getVersionRangeResult(Artifact artifact, String version = '[0,)') {
         VersionRangeRequest rangeRequest = new VersionRangeRequest()
-        rangeRequest.artifact = new DefaultArtifact(artifact.groupId, artifact.artifactId, classifier, version)
+        rangeRequest.artifact = new DefaultArtifact(artifact.groupId, artifact.artifactId, artifact.classifier, artifact.extension, version)
         rangeRequest.repositories = remoteRepositories
         return repositorySystem.resolveVersionRange(repositorySession, rangeRequest)
     }
 
+    VersionRangeResult getVersionRangeResult(ArtifactCoordinate coordinate, String version = '[0,)') {
+        getVersionRangeResult(coordinate.artifact, version)
+    }
+
+    /**
+     * Helper function for {@link #getVersionRangeResult}
+     * @param artifact
+     * @param version
+     * @return
+     */
     List<Version> getArtifactVersions(Artifact artifact, String version = '[0,)') {
         return getVersionRangeResult(artifact, version).versions
     }
 
-    List getArtifactLatestVersion(Artifact artifact) {
-        return getVersionRangeResult(artifact).highestVersion
+    /**
+     *
+     * @param groupId
+     * @param artifactId
+     * @param version
+     * @return
+     */
+    List<Version> getArtifactVersions(String groupId, String artifactId, String version = '[0,)') {
+        return getVersionRangeResult(new DefaultArtifact("$groupId:$artifactId"), version).versions
     }
 
-/**
- * @see <a href="https://wiki.eclipse.org/Aether/Transitive_Dependency_Resolution">Aether wiki</a>
- */
+    /**
+     * Helper function for {@link #getVersionRangeResult} that returns just the latest version
+     * @param artifact
+     * @return
+     */
+    String getArtifactLatestVersion(Artifact artifact) {
+        log.debug "Determing latest version of $artifact"
+        return getVersionRangeResult(artifact).highestVersion.toString()
+    }
+
+    /**
+     * @see <a href="https://wiki.eclipse.org/Aether/Transitive_Dependency_Resolution">Aether wiki</a>
+     */
     DependencyNode getDependencyNode(Artifact artifact, String scope = 'compile') {
         Dependency dependency = new Dependency(artifact, scope)
 
@@ -116,6 +173,17 @@ class Resolver {
         return node
     }
 
+    /**
+     * Largely wraps around {@link com.github.pomes.core.ModelResolverImpl} to determine
+     * the effective POM
+     * @param artifact
+     * @param processPlugins
+     * @param twoPhaseBuilding
+     * @param validationLevel
+     * @param systemProperties
+     * @param modelBuilder
+     * @return
+     */
     Model getEffectiveModel(Artifact artifact,
                             Boolean processPlugins = false,
                             Boolean twoPhaseBuilding = false,
@@ -136,13 +204,32 @@ class Resolver {
         modelBuilder.build(request).effectiveModel
     }
 
-    ArtifactResult getArtifact(String groupId, String artifactId, String version, String classifier = ArtifactClassifier.POM) {
-        getArtifact(new DefaultArtifact(groupId, artifactId, classifier, version))
+    /**
+     *
+     * @param groupId
+     * @param artifactId
+     * @param version
+     * @param packaging
+     * @return
+     */
+    ArtifactResult getArtifact(String groupId, String artifactId, String version, String extension = null, String classifier = '') {
+        getArtifact(new DefaultArtifact(groupId, artifactId, classifier, extension, version))
     }
 
-    ArtifactResult getArtifact(Artifact artifact) {
+    ArtifactResult getArtifact(ArtifactCoordinate coordinate) {
+        getArtifact(coordinate.artifact)
+    }
+
+    /**
+     *
+     * @param artifact
+     * @return
+     */
+    ArtifactResult getArtifact(Artifact artifact) throws ArtifactResolutionException {
+        log.debug("Getting artifact: $artifact")
         ArtifactRequest request = new ArtifactRequest(artifact, remoteRepositories, '')
         repositorySystem.resolveArtifact(repositorySession, request)
     }
+
 
 }
