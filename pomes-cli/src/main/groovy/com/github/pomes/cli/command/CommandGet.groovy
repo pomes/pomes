@@ -45,7 +45,7 @@ class CommandGet implements Command {
     @Override
     void handleRequest(Searcher searcher, Resolver resolver) {
         coordinates.each { coordinate ->
-            log.debug "Info request for $coordinate (latest requested: $latest)"
+            log.debug "Get request for $coordinate (latest requested: $latest)"
 
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
 

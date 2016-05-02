@@ -18,12 +18,12 @@ package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
+import com.github.pomes.core.ArtifactCoordinate
 import com.github.pomes.core.Resolver
 import com.github.pomes.core.Searcher
 import groovy.util.logging.Slf4j
 import org.eclipse.aether.artifact.Artifact
-import org.eclipse.aether.artifact.DefaultArtifact
-import org.eclipse.aether.resolution.ArtifactResult
+import org.eclipse.aether.version.Version
 
 @Slf4j
 @Parameters(commandNames = ['info'], commandDescription = "Gets information about an artifact")
@@ -36,6 +36,26 @@ class CommandInfo implements Command {
 
     @Override
     void handleRequest(Searcher searcher, Resolver resolver) {
+        coordinates.each { coordinate ->
+            log.debug "Info request for $coordinate (latest requested: $latest)"
+            ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
 
+            //TODO: Handle --latest
+
+            if (ac.version) {
+                List<Artifact> artifacts = resolver.getClassifiersAndExtensions(ac)
+
+                println "${artifacts.size()} available classifiers and extensions for $ac"
+                artifacts.each { artifact ->
+                    println " - $artifact - classifier:'${artifact.classifier}' extension:'${artifact.extension}'"
+                }
+            } else {
+                List<Version> versions = resolver.getArtifactVersions(ac.artifact)
+                println "${versions.size()} available versions for $ac"
+                versions.each { version ->
+                    println " - $version"
+                }
+            }
+        }
     }
 }

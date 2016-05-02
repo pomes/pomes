@@ -43,6 +43,11 @@ import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator
 import org.eclipse.aether.version.Version
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
+
+import java.util.regex.Pattern
 
 /**
  *
@@ -231,5 +236,40 @@ class Resolver {
         repositorySystem.resolveArtifact(repositorySession, request)
     }
 
+    List<Artifact> getClassifiersAndExtensions(ArtifactCoordinate coordinate) {
+        getClassifiersAndExtensions(coordinate.artifact)
+    }
 
+    /**
+     * Attempts to determine the classifiers and extensions for a GA
+     *
+     * TODO: Needs a lot more testing
+     * Assumes: A lot! Assumes that a remote repo is used and that
+     * the directory listing can be parsed
+     *
+     * @param artifact
+     */
+    List<Artifact> getClassifiersAndExtensions(Artifact artifact) {
+        List<Artifact> results = []
+        Pattern hrefPattern = ~/$artifact.artifactId-$artifact.version[-]?([^\. ]*).(.*)/
+
+        ArtifactResult result = getArtifact(artifact)
+        String artifactBaseUrl = "${result.repository.url}${artifact.groupId.replace('.', '/')}/${artifact.artifactId}/${artifact.version}"
+        log.debug "Attempting to read directory listing from: $artifactBaseUrl"
+        Elements links = Jsoup.parse(artifactBaseUrl.toURL(), 30_000).select("a[href]")
+        links.each { Element link ->
+            String href = link.ownText()
+            def matcher = hrefPattern.matcher(href)
+            if (matcher.matches()) {
+                results << new DefaultArtifact(artifact.groupId,
+                        artifact.artifactId,
+                        matcher.group(1),
+                        matcher.group(2),
+                        artifact.version)
+            } else {
+                log.debug "Couldn't extract the classifier & extension for $href"
+            }
+        }
+        return results
+    }
 }

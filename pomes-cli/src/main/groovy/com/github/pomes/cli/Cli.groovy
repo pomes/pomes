@@ -118,8 +118,7 @@ class Cli {
                         println "Incorrect usage: ${commandSearch.usage}"
                     break
                 case CliCommands.INFO.name:
-                    //commandInfo.handleRequest(searcher, resolver)
-                    println 'info is not yet implemented'
+                    commandInfo.handleRequest(searcher, resolver)
                     break
                 case CliCommands.GET.name:
                     commandGet.handleRequest(searcher, resolver)
