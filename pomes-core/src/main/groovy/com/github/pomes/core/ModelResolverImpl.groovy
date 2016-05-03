@@ -16,8 +16,10 @@
 
 package com.github.pomes.core
 
+import groovy.util.logging.Slf4j
 import org.apache.maven.model.Parent
 import org.apache.maven.model.Repository
+import org.apache.maven.model.RepositoryBase
 import org.apache.maven.model.building.FileModelSource
 import org.apache.maven.model.building.ModelSource2
 import org.apache.maven.model.resolution.InvalidRepositoryException
@@ -35,10 +37,11 @@ import org.eclipse.aether.resolution.ArtifactResult
 /**
  * Implementation of the {@link org.apache.maven.model.resolution.ModelResolver} interface
  */
+@Slf4j
 public class ModelResolverImpl
         implements ModelResolver {
 
-    private List<RemoteRepository> remoteRepositories
+    private List<Repository> remoteRepositories = []
     private final LocalRepository localRepo
     private final RepositorySystem repoSystem
     private final RepositorySystemSession session
@@ -48,7 +51,10 @@ public class ModelResolverImpl
             RepositorySystemSession session,
             LocalRepository localRepo,
             List<RemoteRepository> remoteRepositories) {
-        this.remoteRepositories = remoteRepositories
+
+        remoteRepositories.each { repo ->
+            addRepository(repo)
+        }
         this.localRepo = localRepo
         this.repoSystem = repoSystem
         this.session = session
@@ -56,7 +62,9 @@ public class ModelResolverImpl
 
     @Override
     ModelSource2 resolveModel(String groupId, String artifactId, String version) throws UnresolvableModelException {
-        Artifact artifact = new DefaultArtifact(groupId, artifactId, ArtifactClassifier.POM, version)
+        Artifact artifact = new DefaultArtifact(groupId, artifactId, ArtifactClassifier.POM.value, version)
+
+        log.debug "Resolving model for $artifact"
 
         ArtifactRequest request = new ArtifactRequest(artifact, remoteRepositories, '')
         ArtifactResult result = repoSystem.resolveArtifact(session, request)
@@ -66,7 +74,9 @@ public class ModelResolverImpl
 
     @Override
     ModelSource2 resolveModel(Parent parent) throws UnresolvableModelException {
-        Artifact artifact = new DefaultArtifact(parent.groupId, parent.artifactId, ArtifactClassifier.POM, parent.version)
+        Artifact artifact = new DefaultArtifact(parent.groupId, parent.artifactId, ArtifactClassifier.POM.value, parent.version)
+
+        log.debug "Resolving model for parent $artifact"
 
         ArtifactRequest request = new ArtifactRequest(artifact, remoteRepositories, '')
         ArtifactResult result = repoSystem.resolveArtifact(session, request)
@@ -74,17 +84,33 @@ public class ModelResolverImpl
         return new FileModelSource(result.artifact.file)
     }
 
-    /**
-     *
-     * @param repository
-     * @throws InvalidRepositoryException
-     */
+    void addRepository(RemoteRepository repository, boolean replace = true) throws InvalidRepositoryException {
+        Repository repo = new Repository()
+        repo.with {
+            id = repository.id
+            url = repository.url
+        }
+        addRepository(repo)
+    }
+
+    @Override
     void addRepository(Repository repository, boolean replace = true) throws InvalidRepositoryException {
-        if (!replace && remoteRepositories.find{it.id == repository.id}) {
-            return
+        log.debug "Adding repository ${repository} (replace = $replace)"
+
+        RemoteRepository existingRepo = remoteRepositories.find{it.id == repository.id}
+
+        if (existingRepo) {
+            if (replace) {
+                remoteRepositories.remove(existingRepo)
+                remoteRepositories << repository
+                return
+            } else {
+                //no-op as we won't replace
+                return
+            }
         }
 
-        remoteRepositories."$repository.id" = repository
+        remoteRepositories << repository
     }
 
     @Override

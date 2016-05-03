@@ -19,11 +19,12 @@ package com.github.pomes.cli.command
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
 import com.github.pomes.core.ArtifactCoordinate
+import com.github.pomes.core.ArtifactExtension
 import com.github.pomes.core.Resolver
 import com.github.pomes.core.Searcher
+import groovy.text.GStringTemplateEngine
 import groovy.util.logging.Slf4j
-import org.eclipse.aether.artifact.Artifact
-import org.eclipse.aether.version.Version
+import org.apache.maven.model.Model
 
 @Slf4j
 @Parameters(commandNames = ['info'], commandDescription = "Gets information about an artifact")
@@ -39,6 +40,34 @@ class CommandInfo implements Command {
         coordinates.each { coordinate ->
             log.debug "Info request for $coordinate (latest requested: $latest)"
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
+
+            if (latest) {
+                ac = ac.copyWith(version: resolver.getArtifactLatestVersion(ac))
+            }
+
+            if (!ac.version) {
+                System.err.println "GAV is required - please provide a version for $ac"
+                log.error "info command failed as coordinate ($ac) doesn't provide a version and --latest not requested"
+                System.exit(-1)
+            }
+
+            if (ac.extension != ArtifactExtension.POM.value)
+                ac = ac.copyWith(extension: ArtifactExtension.POM.value)
+
+            Model model = resolver.getEffectiveModel(resolver.getArtifact(ac).artifact)
+
+            URL template = this.class.getResource('/com/github/pomes/cli/templates/model/details.txt')
+
+            if (template) {
+                GStringTemplateEngine engine = new GStringTemplateEngine()
+
+                println engine.createTemplate(template)
+                        .make([model: model])
+                        .toString()
+            } else {
+                System.err.println "Failed to load the requested template"
+                System.exit(-1)
+            }
         }
     }
 }

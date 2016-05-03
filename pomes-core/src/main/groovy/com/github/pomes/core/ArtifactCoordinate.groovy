@@ -104,7 +104,7 @@ class ArtifactCoordinate {
         //if (!extension) extension = ArtifactExtension.POM.value
 
         ArtifactCoordinate ac = new ArtifactCoordinate(groupId, artifactId, version, extension, classifier)
-        log.debug "New ArtifactCoordinate from $coordinate: $ac"
+        log.debug "New ArtifactCoordinate from $coordinate -> $ac"
         return ac
     }
 }

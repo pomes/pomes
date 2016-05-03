@@ -160,6 +160,14 @@ class Resolver {
         return getVersionRangeResult(artifact).highestVersion.toString()
     }
 
+    /**
+     * Determines the latest version of an artifact.
+     *
+     * Handles a GA coordinate by using #ArtifactCoordinate.VERSION_OPEN as the version
+     *
+     * @param coordinate
+     * @return
+     */
     String getArtifactLatestVersion(ArtifactCoordinate coordinate) {
         if (!coordinate.version)
             getArtifactLatestVersion(coordinate.copyWith(version: ArtifactCoordinate.VERSION_OPEN))
@@ -206,6 +214,7 @@ class Resolver {
                             int validationLevel = ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL,
                             Properties systemProperties = System.properties,
                             ModelBuilder modelBuilder = new DefaultModelBuilderFactory().newInstance()) {
+        log.debug "Preparing effective model for $artifact ($artifact.file)"
 
         ModelBuildingRequest request = new DefaultModelBuildingRequest()
 
@@ -244,7 +253,9 @@ class Resolver {
     ArtifactResult getArtifact(Artifact artifact) throws ArtifactResolutionException {
         log.debug("Getting artifact: $artifact")
         ArtifactRequest request = new ArtifactRequest(artifact, remoteRepositories, '')
-        repositorySystem.resolveArtifact(repositorySession, request)
+        ArtifactResult result = repositorySystem.resolveArtifact(repositorySession, request)
+        log.debug("Artifact $artifact was resolved (got)")
+        return result
     }
 
     List<Artifact> getClassifiersAndExtensions(ArtifactCoordinate coordinate) {
