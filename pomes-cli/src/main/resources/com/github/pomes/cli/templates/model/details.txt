@@ -1,11 +1,19 @@
-Name: ${model.name}
+Name: $model.name
 
-Description: ${model.description}
+Description: $model.description
 
-Maven coordinates: ${model.id}
- - Group ID: ${model.groupId}
- - Artifact ID: ${model.artifactId}
- - Version: ${model.version}
+Inception year: $model.inceptionYear
+
+Maven coordinates: $model.id
+ - Group ID: $model.groupId
+ - Artifact ID: $model.artifactId
+ - Version: $model.version
+
+Packaging: $model.packaging
+
+Project directory: $model.projectDirectory
+
+Parent: ${model.parent? model.parent.id: 'none'}
 
 Organisation:
  - Name: ${model.organization? model.organization.name: 'none'}
@@ -15,10 +23,13 @@ Licence(s):
 <% model.licenses?.each { it.with {out << " - $name ($url) ${distribution?"[Distribution: $distribution]":''}${comments?"[Comments: $comments]":''}\n"} } %>
 
 SCM:
+ - URL: ${model.scm?.url}
+ - Connection: ${model.scm?.connection}
+ - Developer connection: ${model.scm?.developerConnection}
 
+CI: ${model.ciManagement? "$model.ciManagement.system ($model.ciManagement.url)": 'none'}
 
-Contributor(s):
-<% model.contributors?.each { it.with {out << " - $name ${roles?:''}\n"} } %>
+Issue management: ${model.issueManagement? "$model.issueManagement.system ($model.issueManagement.url)": 'none'}
 
-Developer(s):
-<% model.developers?.each { it.with {out << " - $id\n"} } %>
+Mailing lists:
+<% model.mailingLists?.each { it.with {out << " - $name ($archive)\n"} } %>
