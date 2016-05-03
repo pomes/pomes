@@ -33,3 +33,6 @@ Issue management: ${model.issueManagement? "$model.issueManagement.system ($mode
 
 Mailing lists:
 <% model.mailingLists?.each { it.with {out << " - $name ($archive)\n"} } %>
+
+Profiles:
+<% model.profiles? model.profiles.each { it.with {out << " - $id\n"} }: out <<' - none' %>

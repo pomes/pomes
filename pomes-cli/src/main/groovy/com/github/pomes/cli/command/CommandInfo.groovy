@@ -25,6 +25,9 @@ import com.github.pomes.core.Searcher
 import groovy.text.GStringTemplateEngine
 import groovy.util.logging.Slf4j
 import org.apache.maven.model.Model
+import org.eclipse.aether.artifact.Artifact
+import org.eclipse.aether.graph.DependencyNode
+import org.eclipse.aether.resolution.ArtifactResult
 
 @Slf4j
 @Parameters(commandNames = ['info'], commandDescription = "Gets information about an artifact")
@@ -34,6 +37,12 @@ class CommandInfo implements Command {
 
     @Parameter(names = ['-l', '--latest'], description = 'Use the latest version')
     Boolean latest
+
+    @Parameter(names = ['-s', '--scope'], description = 'Sets the dependency scope (default is \'compile\')')
+    String scope = 'compile'
+
+    @Parameter(names = ['-d', '--dependencies'], description = 'Resolves dependencies')
+    Boolean dependencies = false
 
     @Override
     void handleRequest(Searcher searcher, Resolver resolver) {
@@ -54,7 +63,13 @@ class CommandInfo implements Command {
             if (ac.extension != ArtifactExtension.POM.value)
                 ac = ac.copyWith(extension: ArtifactExtension.POM.value)
 
-            Model model = resolver.getEffectiveModel(resolver.getArtifact(ac).artifact)
+            Artifact artifact = resolver.getArtifact(ac).artifact
+            Model model = resolver.getEffectiveModel(artifact)
+            DependencyNode dependencyNode
+
+            if (dependencies) {
+                dependencyNode = resolver.getDependencyNode(artifact, scope)
+            }
 
             URL template = this.class.getResource('/com/github/pomes/cli/templates/model/details.txt')
 
@@ -62,7 +77,8 @@ class CommandInfo implements Command {
                 GStringTemplateEngine engine = new GStringTemplateEngine()
 
                 println engine.createTemplate(template)
-                        .make([model: model])
+                        .make([model: model,
+                               nodes: dependencyNode])
                         .toString()
             } else {
                 System.err.println "Failed to load the requested template"
