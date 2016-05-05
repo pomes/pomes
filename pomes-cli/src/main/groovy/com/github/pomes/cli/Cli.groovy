@@ -3,12 +3,8 @@ package com.github.pomes.cli
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.MissingCommandException
 import com.beust.jcommander.Parameter
-import com.github.pomes.cli.command.CommandGet
-import com.github.pomes.cli.command.CommandHelp
-import com.github.pomes.cli.command.CommandInfo
-import com.github.pomes.cli.command.CommandQuery
-import com.github.pomes.cli.command.CommandRepo
-import com.github.pomes.cli.command.CommandSearch
+import com.beust.jcommander.ParameterException
+import com.github.pomes.cli.command.Command
 import com.github.pomes.core.Resolver
 import com.github.pomes.core.Searcher
 import com.github.pomes.core.repositories.DefaultLocalRepository
@@ -32,119 +28,86 @@ import java.nio.file.Files
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
 @Slf4j
 class Cli {
+
+    static final String programVersion = '0.1.0'
+    static final String programName = 'pomes'
 
     final Searcher searcher
     final Resolver resolver
 
     @Parameter(names = ['-h', '--help'], help = true)
-    Boolean help = false
+    Boolean help
 
-    final JCommander jc
+    @Parameter(names = ['-v', '--version'], description = 'Displays version information')
+    Boolean version
 
-    def commandHelp = new CommandHelp()
-    def commandSearch = new CommandSearch()
-    def commandRepo = new CommandRepo()
-    def commandGet = new CommandGet()
-    def commandInfo = new CommandInfo()
-    def commandQuery = new CommandQuery()
+    JCommander jc
 
-    Cli(){
+    Cli() {
+        jc = new JCommander(this)
         searcher = new Searcher(new JCenter())
+        resolver = new Resolver([JCenter.newJCenterRemoteRepository()], DefaultLocalRepository.repository)
 
-        if (! Files.exists(DefaultLocalRepository.baseDir)) {
+        if (!Files.exists(DefaultLocalRepository.baseDir)) {
             Files.createDirectories(DefaultLocalRepository.baseDir)
         }
 
-        resolver = new Resolver([JCenter.newJCenterRemoteRepository()], DefaultLocalRepository.repository)
-
-        jc = new JCommander(this)
         jc.programName = 'pomes'
-        jc.addCommand commandHelp
-        jc.addCommand commandSearch
-        jc.addCommand commandQuery
-        jc.addCommand commandInfo
-        jc.addCommand commandGet
-        jc.addCommand commandRepo
+        CliCommands.values().each { cmd ->
+            jc.addCommand cmd.command
+        }
     }
 
     Boolean parse(String... args) {
         try {
             jc.parse(args)
+            return true
         } catch (MissingCommandException mce) {
+            log.error "Missing command ($args) - $mce.message"
+            System.err.println "Expected a command (${CliCommands.values().value}"
+            return false
+        } catch (ParameterException pe) {
+            log.error "Parameter exception ($args) - $pe.message"
+            System.err.println pe.message
             return false
         }
-        true
     }
 
     String getCommand() { jc.parsedCommand }
 
-    /*
-    StringBuilder getUsage() {
-        StringBuilder out = new StringBuilder()
-        jc.usage(out)
-        out
-    }
-    */
-
-    void getCommandUsage(String command = '', StringBuilder out) {
-        out.append getCommandUsage(command)
-    }
-
-    StringBuilder getCommandUsage(String command = '') {
-        StringBuilder out = new StringBuilder()
-        if (command && jc.commands.containsKey(command)) {
-            jc.usage(command, out)
-        } else {
-            out << 'Please select a command:\n'
-            jc.commands.findAll { it.key != CliCommands.HELP.name }.each { cmd, cmdObj ->
-                out << "  $cmd: ${jc.getCommandDescription(cmd)}\n"
-            }
+    void handleRequest() {
+        if (version) {
+            println "$programName $programVersion"
+            return
         }
-        out
-    }
 
-    void handleRequest(Searcher searcher, Resolver resolver) {
-        if (!command || !jc.commands.containsKey(command)) {
+        if (help) {
             jc.usage()
+            return
+        }
+
+        Command cmd = CliCommands.lookupCliCommand(command).command
+
+        if (cmd) {
+            log.debug "Calling command: $cmd"
+            cmd.handleRequest(searcher, resolver)
+            return
         } else {
-            log.debug "Calling command: $command"
-            switch (command) {
-                case CliCommands.HELP.name:
-                    println getCommandUsage(commandHelp.helpSubCommands?.get(0))
-                    break
-                case CliCommands.SEARCH.name:
-                    if (commandSearch.isValid())
-                        commandSearch.handleRequest(searcher, resolver)
-                    else
-                        println "Incorrect usage: ${commandSearch.usage}"
-                    break
-                case CliCommands.QUERY.name:
-                    commandQuery.handleRequest(searcher, resolver)
-                    break
-                case CliCommands.INFO.name:
-                    commandInfo.handleRequest(searcher, resolver)
-                    break
-                case CliCommands.GET.name:
-                    commandGet.handleRequest(searcher, resolver)
-                    break
-                case CliCommands.REPO.name:
-                    println 'repo is not yet implemented'
-                    break
-                default:
-                    println getCommandUsage(commandHelp.helpSubCommands?.get(0))
-            }
+            jc.usage()
+            return
         }
     }
 
     static void main(String[] args) {
         Cli cli = new Cli()
-        log.debug "Searcher: $cli.searcher"
 
-        if (cli.parse(args))
-            cli.handleRequest(cli.searcher, cli.resolver)
-        else
-            println cli.commandUsage
+        if (cli.parse(args)) {
+            cli.handleRequest()
+        } else {
+            System.exit(-1)
+        }
     }
 }

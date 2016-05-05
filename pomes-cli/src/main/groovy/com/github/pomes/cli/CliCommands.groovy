@@ -16,22 +16,41 @@
 
 package com.github.pomes.cli
 
+import com.github.pomes.cli.command.Command
+import com.github.pomes.cli.command.CommandAbout
+import com.github.pomes.cli.command.CommandGet
+import com.github.pomes.cli.command.CommandHelp
+import com.github.pomes.cli.command.CommandInfo
+import com.github.pomes.cli.command.CommandQuery
+import com.github.pomes.cli.command.CommandRepo
+import com.github.pomes.cli.command.CommandSearch
+
 enum CliCommands {
-    HELP('help'),
-    SEARCH('search'),
-    GET('get'),
-    INFO('info'),
-    QUERY('query'),
-    REPO('repo')
+    HELP('help', CommandHelp),
+    SEARCH('search', CommandSearch),
+    GET('get', CommandGet),
+    INFO('info', CommandInfo),
+    QUERY('query', CommandQuery),
+    REPO('repo', CommandRepo),
+    ABOUT('about', CommandAbout)
 
-    final String name
+    final String value
+    final Command command
 
-    CliCommands(String name) {
-        this.name = name
+    CliCommands(String value, Class command) {
+        this.value = value
+        this.command = command.newInstance()
+    }
+
+    static CliCommands lookupCliCommand(String value) {
+        for (CliCommands cmd in CliCommands.values()) {
+            if (cmd.value == value) return cmd
+        }
+        return null
     }
 
     @Override
     public String toString() {
-        return name
+        return value
     }
 }

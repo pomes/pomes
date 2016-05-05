@@ -33,6 +33,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE
 @Slf4j
 @ToString
 final class JCenter implements RepositorySearcher {
+    static final String displayName = 'JCenter'
     static final String id = 'jcenter'
     static final URL url = 'http://jcenter.bintray.com/'.toURL()
     static final String repositoryType = 'default'
@@ -43,6 +44,7 @@ final class JCenter implements RepositorySearcher {
         builder.build()
     }
 
+    @Override
     List<RepositoryWebQueryResult> query(String query) {
         def json =
                 newClient().
@@ -54,6 +56,7 @@ final class JCenter implements RepositorySearcher {
         mapQueryResults slurper.parseText(json)
     }
 
+    @Override
     List<RepositoryWebQueryResult> query(String groupId, String artifactId) {
         def json =
                 newClient().
@@ -74,13 +77,23 @@ final class JCenter implements RepositorySearcher {
             results << new RepositoryWebQueryResult(
                     groupId: coordinates[0],
                     artifactId: coordinates[1],
-                    description: result.desc?.replaceAll(/(\r\n|\r|\n)/, '') ,
+                    description: result.desc?.replaceAll(/(\r\n|\r|\n)/, ''),
                     versions: result.versions,
                     latestVersion: result.latest_version)
         }
         return results
     }
 
+    @Override
+    String getId() { JCenter.id }
+
+    @Override
+    String getDisplayName() { JCenter.displayName }
+
+    @Override
+    URL getApiUrl() { JCenter.apiUrl }
+
+    @Override
     RepositorySearcher copy() {
         return new JCenter()
     }

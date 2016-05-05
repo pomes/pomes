@@ -48,6 +48,10 @@ class CommandSearch implements Command {
 
     @Override
     void handleRequest(Searcher searcher, Resolver resolver) {
+        if (!isValid()) {
+            throw new IllegalArgumentException("Incorrect usage: ${commandSearch.usage}")
+        }
+
         List<RepositoryWebQueryResult> results
         if (queryText) {
             results = searcher.search(queryText)

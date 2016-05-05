@@ -16,11 +16,39 @@
 
 package com.github.pomes.cli.command
 
+import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
+import com.github.pomes.cli.CliCommands
+import com.github.pomes.core.Resolver
+import com.github.pomes.core.Searcher
 
-@Parameters(commandNames = ['help'], commandDescription = "Displays help information")
-class CommandHelp {
+@Parameters(commandNames = ['help'], commandDescription = "Displays help information for sub-commands")
+class CommandHelp implements Command {
     @Parameter(description = 'The requested command(s) for which you seek help')
-    List<String> helpSubCommands
+    List<String> helpSubCommands = []
+
+    @Override
+    void handleRequest(Searcher searcher, Resolver resolver) {
+        /*
+         * TODO: This is not efficient, it repeats the block in Cli
+         */
+        JCommander jc = new JCommander()
+        CliCommands.values().each { cmd ->
+            jc.addCommand cmd.command
+        }
+        // End of todo
+
+        StringBuilder out = new StringBuilder()
+
+        if (helpSubCommands[0]) {
+            jc.usage(helpSubCommands[0], out)
+        } else {
+            out << 'Please select a command:\n'
+            jc.commands.findAll { key, value -> key != CliCommands.HELP }.each { cmdObj ->
+                out << "  ${"$cmdObj.key:".padRight(10)}${jc.getCommandDescription(cmdObj.key)} \n"
+            }
+        }
+        println out
+    }
 }

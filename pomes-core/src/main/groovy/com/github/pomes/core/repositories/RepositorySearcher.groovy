@@ -22,6 +22,13 @@ import com.github.pomes.core.query.RepositoryWebQueryResult
  * Basic interface for searching a repository
  */
 interface RepositorySearcher {
+
+    String getId()
+
+    String getDisplayName()
+
+    URL getApiUrl()
+
     /**
      * Performs a general search. No search syntax should be added by implementing classes
      * @param query the search text

@@ -16,11 +16,25 @@
 
 package com.github.pomes.cli.command
 
-import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
+import com.github.pomes.core.Resolver
+import com.github.pomes.core.Searcher
 
 @Parameters(commandNames = ['repo'], commandDescription = "Displays repository information")
-class CommandRepo {
-    @Parameter(description = '<local>')
-    List<String> repoSubCommands
+class CommandRepo implements Command {
+
+    @Override
+    void handleRequest(Searcher searcher, Resolver resolver) {
+        println """\
+Web searching:
+ - Primary: ${searcher.primarySearchProvider.displayName} (${searcher.primarySearchProvider.apiUrl})
+ - Secondaries:
+   - ${ out -> searcher.alternativeSearchProviders.each { out << "$it.displayName ($it.apiUrl)\n" }}
+
+Maven repositories:
+ - Local: ${resolver.localRepository.basedir}
+ - Remote:
+${ out -> resolver.remoteRepositories.each { out << "   - $it.id ($it.url)\n" }}
+"""
+    }
 }
