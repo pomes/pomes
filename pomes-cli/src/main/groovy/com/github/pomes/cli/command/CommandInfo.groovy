@@ -40,12 +40,6 @@ class CommandInfo implements Command {
     @Parameter(names = ['-s', '--scope'], description = 'Sets the dependency scope (default is \'compile\')')
     String scope = 'compile'
 
-    @Parameter(names = ['-d', '--dependencies'], description = 'Resolves dependencies')
-    Boolean dependencies = false
-
-    @Parameter(names = ['-t', '--transitive'], description = 'Resolves transitive dependencies')
-    Boolean transitive = false
-
     @Override
     void handleRequest(Searcher searcher, Resolver resolver) {
         coordinates.each { coordinate ->
@@ -68,35 +62,7 @@ class CommandInfo implements Command {
             Artifact artifact = resolver.getArtifact(ac).artifact
             Model model = resolver.getEffectiveModel(artifact)
 
-
-            List<Dependency> dependencyList = resolver.getAllDependencies(artifact, scope)
-
-                /*
-                DependencyNode dependencyNode
-
-            StringBuilder dependencyTree
-                if (dependencies || transitive) {
-                dependencyNode = resolver.getDependencyNode(artifact, scope)
-                dependencyTree = new StringBuilder()
-
-                def nodeWalker
-                nodeWalker = { DependencyNode node, Integer pad = 1 ->
-                    log.debug("Children for $node.artifact: ${node.children*.artifact.toString()}")
-                    for (DependencyNode child in node.children) {
-                        dependencyTree << "${' ' * pad}- $child.artifact (version constraint: ${child.versionConstraint})\n"
-                        if (transitive) {
-                            //TODO: This will cause a stack overflow because of cycles in the dependency tree
-                            //      I need to implement a visitor class that handles this!
-                            //      Perhaps: RepositorySystemSession.getDependencyTraverser
-                            //output << nodeWalkerTrampoline(resolver.getDependencyNode(child.artifact, scope), pad + 2)
-                        }
-                    }
-                }
-
-                nodeWalker(dependencyNode)
-                }
-                */
-
+            List<Dependency> dependencyList = resolver.getDirectDependencies(artifact)
 
             URL template = this.class.getResource('/com/github/pomes/cli/templates/model/details.txt')
 
@@ -105,7 +71,7 @@ class CommandInfo implements Command {
 
                 println engine.createTemplate(template)
                         .make([model       : model,
-                               dependencies: dependencyList])
+                               dependencies: dependencyList.sort(false, { it.scope })])
                         .toString()
             } else {
                 System.err.println "Failed to load the requested template"

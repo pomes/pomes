@@ -36,7 +36,7 @@ Mailing lists:
 
 Profiles:
 <% model.profiles? model.profiles.each { it.with {out << " - $id\n"} }: out <<' - none' %>
-<% if (dependencies) { %>
-Dependencies:
-<% dependencies.each { out << " - $it.artifact\n" } %>
-<%}%>
+
+Direct dependencies:
+<% dependencies? dependencies.each { out << " - ${"[${it.scope}]".padRight(12)} $it.artifact ${it.isOptional()? '(optional) ': ''}${it.exclusions? "(exclusions: $it.exclusions) ": ''}\n" }: out <<' - none' %>
+

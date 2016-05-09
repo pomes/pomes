@@ -19,7 +19,6 @@ package com.github.pomes.core
 import groovy.util.logging.Slf4j
 import org.apache.maven.model.Parent
 import org.apache.maven.model.Repository
-import org.apache.maven.model.RepositoryBase
 import org.apache.maven.model.building.FileModelSource
 import org.apache.maven.model.building.ModelSource2
 import org.apache.maven.model.resolution.InvalidRepositoryException
@@ -42,22 +41,21 @@ public class ModelResolverImpl
         implements ModelResolver {
 
     private List<Repository> remoteRepositories = []
-    private final LocalRepository localRepo
-    private final RepositorySystem repoSystem
-    private final RepositorySystemSession session
+    private final LocalRepository localRepository
+    private final RepositorySystem repositorySystem
+    private final RepositorySystemSession repositorySession
 
     ModelResolverImpl(
-            RepositorySystem repoSystem,
-            RepositorySystemSession session,
-            LocalRepository localRepo,
+            RepositorySystem repositorySystem,
+            RepositorySystemSession repositorySession,
+            LocalRepository localRepository,
             List<RemoteRepository> remoteRepositories) {
-
+        this.localRepository = localRepository
+        this.repositorySystem = repositorySystem
+        this.repositorySession = repositorySession
         remoteRepositories.each { repo ->
             addRepository(repo)
         }
-        this.localRepo = localRepo
-        this.repoSystem = repoSystem
-        this.session = session
     }
 
     @Override
@@ -67,7 +65,7 @@ public class ModelResolverImpl
         log.debug "Resolving model for $artifact"
 
         ArtifactRequest request = new ArtifactRequest(artifact, remoteRepositories, '')
-        ArtifactResult result = repoSystem.resolveArtifact(session, request)
+        ArtifactResult result = repositorySystem.resolveArtifact(repositorySession, request)
 
         return new FileModelSource(result.artifact.file)
     }
@@ -78,8 +76,8 @@ public class ModelResolverImpl
 
         log.debug "Resolving model for parent $artifact"
 
-        ArtifactRequest request = new ArtifactRequest(artifact, remoteRepositories, '')
-        ArtifactResult result = repoSystem.resolveArtifact(session, request)
+        ArtifactResult result = repositorySystem.resolveArtifact(repositorySession,
+                new ArtifactRequest(artifact, remoteRepositories, null))
 
         return new FileModelSource(result.artifact.file)
     }
@@ -115,6 +113,6 @@ public class ModelResolverImpl
 
     @Override
     ModelResolver newCopy() {
-        return new ModelResolverImpl(repoSystem,session,localRepo,remoteRepositories)
+        return new ModelResolverImpl(repositorySystem,repositorySession,localRepository,remoteRepositories)
     }
 }
