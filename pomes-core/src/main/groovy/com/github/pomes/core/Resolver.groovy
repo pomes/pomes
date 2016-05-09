@@ -30,6 +30,7 @@ import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.artifact.DefaultArtifact
 import org.eclipse.aether.collection.CollectRequest
+import org.eclipse.aether.collection.CollectResult
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory
 import org.eclipse.aether.graph.Dependency
 import org.eclipse.aether.graph.DependencyNode
@@ -179,22 +180,48 @@ class Resolver {
      * @see <a href="https://wiki.eclipse.org/Aether/Transitive_Dependency_Resolution">Aether wiki</a>
      */
     DependencyNode getDependencyNode(Artifact artifact, String scope = 'compile') {
-        Dependency dependency = new Dependency(artifact, scope)
 
-        CollectRequest collectRequest = new CollectRequest()
-        collectRequest.root = dependency
-        collectRequest.repositories = remoteRepositories
+        CollectRequest collectRequest = new CollectRequest(new Dependency(artifact, scope),
+                remoteRepositories)
 
-        DependencyNode node = repositorySystem.collectDependencies(repositorySession, collectRequest).root
+        CollectResult collectResult =  repositorySystem.collectDependencies(repositorySession, collectRequest)
+
+        DependencyNode node = collectResult.root
 
         DependencyRequest dependencyRequest = new DependencyRequest()
         dependencyRequest.root = node
 
-        repositorySystem.resolveDependencies(repositorySession, dependencyRequest)
+        DependencyResult dependencyResult = repositorySystem.resolveDependencies(repositorySession, dependencyRequest)
+        log.debug "Result of resolveDependencies for $artifact was ${dependencyResult.artifactResults.size()} artifacts: ${dependencyResult.artifactResults*.artifact}"
 
         PreorderNodeListGenerator nlg = new PreorderNodeListGenerator()
         node.accept(nlg)
+        log.debug "NLG: ${nlg.nodes*.artifact}"
         return node
+    }
+
+    List<Dependency> getAllDependencies(Artifact artifact, String scope = 'compile') {
+
+        log.debug "Determining all dependencies of $artifact (scope: $scope)"
+        CollectRequest collectRequest = new CollectRequest(new Dependency(artifact, scope),
+                remoteRepositories)
+
+        CollectResult collectResult =  repositorySystem.collectDependencies(repositorySession, collectRequest)
+
+        DependencyNode node = collectResult.root
+
+        DependencyRequest dependencyRequest = new DependencyRequest()
+        dependencyRequest.root = node
+
+        DependencyResult dependencyResult = repositorySystem.resolveDependencies(repositorySession, dependencyRequest)
+
+        PreorderNodeListGenerator nlg = new PreorderNodeListGenerator()
+        node.accept(nlg)
+        List<Dependency> result = nlg.getDependencies(false)
+        if (log.debugEnabled) {
+            log.debug("Arifact $artifact has ${result.size()} dependencies: ${result*.artifact}")
+        }
+        return result
     }
 
     /**

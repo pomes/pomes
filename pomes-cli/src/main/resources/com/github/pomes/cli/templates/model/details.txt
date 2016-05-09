@@ -1,4 +1,4 @@
-Name: $model.value
+Name: $model.name
 
 Description: $model.description
 
@@ -16,11 +16,11 @@ Project directory: $model.projectDirectory
 Parent: ${model.parent? model.parent.id: 'none'}
 
 Organisation:
- - Name: ${model.organization? model.organization.value: 'none'}
+ - Name: ${model.organization? model.organization.name: 'none'}
  - URL: ${model.organization? model.organization.url: 'none'}
 
 Licence(s):
-<% model.licenses?.each { it.with {out << " - $value ($url) ${distribution?"[Distribution: $distribution]":''}${comments?"[Comments: $comments]":''}\n"} } %>
+<% model.licenses?.each { it.with {out << " - $name ($url) ${distribution?"[Distribution: $distribution]":''}${comments?"[Comments: $comments]":''}\n"} } %>
 
 SCM:
  - URL: ${model.scm?.url}
@@ -32,7 +32,11 @@ CI: ${model.ciManagement? "$model.ciManagement.system ($model.ciManagement.url)"
 Issue management: ${model.issueManagement? "$model.issueManagement.system ($model.issueManagement.url)": 'none'}
 
 Mailing lists:
-<% model.mailingLists?.each { it.with {out << " - $value ($archive)\n"} } %>
+<% model.mailingLists?.each { it.with {out << " - $name ($archive)\n"} } %>
 
 Profiles:
 <% model.profiles? model.profiles.each { it.with {out << " - $id\n"} }: out <<' - none' %>
+<% if (dependencies) { %>
+Dependencies:
+<% dependencies.each { out << " - $it.artifact\n" } %>
+<%}%>

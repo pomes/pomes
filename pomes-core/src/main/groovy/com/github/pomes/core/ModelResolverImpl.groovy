@@ -74,7 +74,7 @@ public class ModelResolverImpl
 
     @Override
     ModelSource2 resolveModel(Parent parent) throws UnresolvableModelException {
-        Artifact artifact = new DefaultArtifact(parent.groupId, parent.artifactId, ArtifactClassifier.POM.value, parent.version)
+        Artifact artifact = new DefaultArtifact(parent.groupId, parent.artifactId, ArtifactExtension.POM.value, parent.version)
 
         log.debug "Resolving model for parent $artifact"
 
