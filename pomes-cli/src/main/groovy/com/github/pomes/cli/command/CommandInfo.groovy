@@ -68,9 +68,9 @@ class CommandInfo implements Command {
             Artifact artifact = resolver.getArtifact(ac).artifact
             Model model = resolver.getEffectiveModel(artifact)
 
-            if (dependencies || transitive) {
-                List<Dependency> dependencyList = resolver.getAllDependencies(artifact, scope)
-            }
+
+            List<Dependency> dependencyList = resolver.getAllDependencies(artifact, scope)
+
                 /*
                 DependencyNode dependencyNode
 
