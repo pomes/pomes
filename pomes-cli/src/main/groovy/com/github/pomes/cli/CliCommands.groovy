@@ -18,6 +18,7 @@ package com.github.pomes.cli
 
 import com.github.pomes.cli.command.Command
 import com.github.pomes.cli.command.CommandAbout
+import com.github.pomes.cli.command.CommandCheck
 import com.github.pomes.cli.command.CommandGet
 import com.github.pomes.cli.command.CommandHelp
 import com.github.pomes.cli.command.CommandInfo
@@ -31,6 +32,7 @@ enum CliCommands {
     GET('get', CommandGet),
     INFO('info', CommandInfo),
     QUERY('query', CommandQuery),
+    CHECK('check', CommandCheck),
     REPO('repo', CommandRepo),
     ABOUT('about', CommandAbout)
 
