@@ -89,7 +89,7 @@ class Cli {
             return
         }
 
-        Command cmd = CliCommands.lookupCliCommand(command).command
+        Command cmd = CliCommands.lookupCliCommand(command)?.command
 
         if (cmd) {
             log.debug "Calling command: $cmd"

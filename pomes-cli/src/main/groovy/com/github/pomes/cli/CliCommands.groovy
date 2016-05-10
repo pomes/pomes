@@ -16,14 +16,7 @@
 
 package com.github.pomes.cli
 
-import com.github.pomes.cli.command.Command
-import com.github.pomes.cli.command.CommandAbout
-import com.github.pomes.cli.command.CommandGet
-import com.github.pomes.cli.command.CommandHelp
-import com.github.pomes.cli.command.CommandInfo
-import com.github.pomes.cli.command.CommandQuery
-import com.github.pomes.cli.command.CommandRepo
-import com.github.pomes.cli.command.CommandSearch
+import com.github.pomes.cli.command.*
 
 enum CliCommands {
     HELP('help', CommandHelp),
@@ -31,6 +24,7 @@ enum CliCommands {
     GET('get', CommandGet),
     INFO('info', CommandInfo),
     QUERY('query', CommandQuery),
+    DEPENDENCIES('dependencies', CommandDependencies),
     REPO('repo', CommandRepo),
     ABOUT('about', CommandAbout)
 

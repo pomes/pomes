@@ -47,7 +47,7 @@ import org.eclipse.aether.version.Version
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
-
+import static org.eclipse.aether.util.artifact.JavaScopes.*
 import java.util.regex.Pattern
 
 /**
@@ -179,7 +179,7 @@ class Resolver {
     /**
      * @see <a href="https://wiki.eclipse.org/Aether/Transitive_Dependency_Resolution">Aether wiki</a>
      */
-    DependencyNode getDependencyNode(Artifact artifact, String scope = 'compile') {
+    DependencyNode getDependencyNode(Artifact artifact, String scope = COMPILE) {
 
         CollectRequest collectRequest = new CollectRequest(new Dependency(artifact, scope),
                 remoteRepositories)
@@ -200,14 +200,13 @@ class Resolver {
         return node
     }
 
-    List<Dependency> getAllDependencies(Artifact artifact, String scope = 'compile') {
+    List<Dependency> getAllDependencies(Artifact artifact, String scope = COMPILE) {
 
         log.debug "Determining all dependencies of $artifact (scope: $scope)"
         CollectRequest collectRequest = new CollectRequest(new Dependency(artifact, scope),
                 remoteRepositories)
 
         CollectResult collectResult =  repositorySystem.collectDependencies(repositorySession, collectRequest)
-
         DependencyNode node = collectResult.root
 
         DependencyRequest dependencyRequest = new DependencyRequest()
@@ -222,6 +221,23 @@ class Resolver {
             log.debug("Arifact $artifact has ${result.size()} dependencies: ${result*.artifact}")
         }
         return result
+    }
+
+    /**
+     *
+     * The result can be passed to repositorySystem.resolveDependencies
+     *
+     * @param artifact
+     * @param scope
+     * @return
+     */
+    CollectResult collectAllDependencies(Artifact artifact, String scope = COMPILE) {
+        log.debug "Collecting all dependencies of $artifact (scope: $scope)"
+
+        CollectRequest collectRequest = new CollectRequest(new Dependency(artifact, scope),
+                remoteRepositories)
+
+        return repositorySystem.collectDependencies(repositorySession, collectRequest)
     }
 
     /**
