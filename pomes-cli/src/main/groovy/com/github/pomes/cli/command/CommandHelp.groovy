@@ -46,7 +46,7 @@ class CommandHelp implements Command {
         } else {
             out << 'Please select a command:\n'
             jc.commands.findAll { key, value -> key != CliCommands.HELP }.each { cmdObj ->
-                out << "  ${"$cmdObj.key:".padRight(10)}${jc.getCommandDescription(cmdObj.key)} \n"
+                out << "  ${"$cmdObj.key:".padRight(15)}${jc.getCommandDescription(cmdObj.key)} \n"
             }
         }
         println out
