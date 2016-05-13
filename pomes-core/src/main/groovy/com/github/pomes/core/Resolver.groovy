@@ -29,8 +29,11 @@ import org.eclipse.aether.RepositorySystem
 import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.artifact.DefaultArtifact
+import org.eclipse.aether.collection.CollectRequest
+import org.eclipse.aether.collection.CollectResult
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory
 import org.eclipse.aether.graph.Dependency
+import org.eclipse.aether.graph.DependencyNode
 import org.eclipse.aether.impl.DefaultServiceLocator
 import org.eclipse.aether.repository.LocalRepository
 import org.eclipse.aether.repository.RemoteRepository
@@ -39,6 +42,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
+import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator
 import org.eclipse.aether.version.Version
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
@@ -175,6 +179,7 @@ class Resolver {
     /**
      * @see <a href="https://wiki.eclipse.org/Aether/Transitive_Dependency_Resolution">Aether wiki</a>
      */
+    /*
     DependencyNode getDependencyNode(Artifact artifact, String scope = COMPILE) {
 
         CollectRequest collectRequest = new CollectRequest(new Dependency(artifact, scope),
@@ -197,26 +202,18 @@ class Resolver {
     }
     */
 
-    List<Dependency> getAllDependencies(Artifact artifact, String scope = COMPILE) {
+    //List<Dependency> getAllDependencies(Artifact artifact, String scope = COMPILE) {
 
     List<Dependency> getDirectDependencies(Artifact artifact) {
         log.debug "Determining direct dependencies of $artifact"
 
-        CollectResult collectResult =  repositorySystem.collectDependencies(repositorySession, collectRequest)
-        DependencyNode node = collectResult.root
+        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest()
+        descriptorRequest.artifact = artifact
+        descriptorRequest.repositories = remoteRepositories
 
-        DependencyRequest dependencyRequest = new DependencyRequest()
-        dependencyRequest.root = node
-
-        DependencyResult dependencyResult = repositorySystem.resolveDependencies(repositorySession, dependencyRequest)
-
-        PreorderNodeListGenerator nlg = new PreorderNodeListGenerator()
-        node.accept(nlg)
-        List<Dependency> result = nlg.getDependencies(false)
-        if (log.debugEnabled) {
-            log.debug("Arifact $artifact has ${result.size()} dependencies: ${result*.artifact}")
-        }
-        return result
+        List<Dependency> dependencies = repositorySystem.readArtifactDescriptor(repositorySession, descriptorRequest).dependencies
+        log.debug "Direct dependencies of $artifact: $dependencies"
+        return dependencies
     }
 
     /**

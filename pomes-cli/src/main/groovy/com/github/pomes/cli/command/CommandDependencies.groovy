@@ -39,9 +39,6 @@ class CommandDependencies implements Command {
     @Parameter(names = ['-s', '--scope'], description = 'Sets the dependency scope')
     String scope = COMPILE
 
-    //@Parameter(names = ['-t', '--transitive'], description = 'Resolves transitive dependencies')
-    //Boolean transitive = false
-
     @Override
     void handleRequest(Searcher searcher, Resolver resolver) {
         coordinates.each { coordinate ->

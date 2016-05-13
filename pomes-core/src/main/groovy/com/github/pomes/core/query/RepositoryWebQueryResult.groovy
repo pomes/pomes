@@ -31,6 +31,7 @@ class RepositoryWebQueryResult {
 
     @Override
     String toString() {
-        "$groupId:$artifactId $versions ($latestVersion) - $description"
+        //"$groupId:$artifactId $versions ($latestVersion) - $description"
+        "$groupId:$artifactId:$latestVersion - $description"
     }
 }

@@ -52,7 +52,7 @@ final class JCenter implements RepositorySearcher {
                         queryParam('q', "$query").
                         request(APPLICATION_JSON_TYPE).get(String)
         log.debug "JCenter result for $query: $json"
-        def slurper = new JsonSlurper()
+        JsonSlurper slurper = new JsonSlurper()
         mapQueryResults slurper.parseText(json)
     }
 

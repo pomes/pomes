@@ -3,4 +3,10 @@ Checking $artifact
 Version: ${(artifact.version == latestVersion)? "$artifact.version is the latest version": "$artifact is not the latest version ($latestVersion)"}
 
 Outdated direct dependencies:
-<% outdatedDependencies? outdatedDependencies.each { out << " - ${"[${it.value.scope}]".padRight(12)}$it.key (latest: ${it.value.latestVersion})\n"}: ' - none' %>
+<%
+if (transitive) {
+    outdatedTransitiveDependencies.root.accept(visitor)
+} else {
+    outdatedDependencies? outdatedDependencies.each { out << " - ${"[${it.value.scope}]".padRight(12)}$it.key (latest: ${it.value.latestVersion})\n"}: ' - none'
+}
+%>

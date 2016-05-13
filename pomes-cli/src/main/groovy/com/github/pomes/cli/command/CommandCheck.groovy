@@ -21,10 +21,16 @@ import com.beust.jcommander.Parameters
 import com.github.pomes.core.ArtifactCoordinate
 import com.github.pomes.core.Resolver
 import com.github.pomes.core.Searcher
+import com.github.pomes.core.dependency.graph.display.CommandLineDumper
+import com.github.pomes.core.dependency.graph.display.CommandLineDumperTransitiveDependencyCheck
 import groovy.text.GStringTemplateEngine
 import groovy.util.logging.Slf4j
 import org.eclipse.aether.artifact.Artifact
+import org.eclipse.aether.collection.CollectResult
 import org.eclipse.aether.graph.Dependency
+import org.eclipse.aether.graph.DependencyVisitor
+
+import static org.eclipse.aether.util.artifact.JavaScopes.COMPILE
 
 @Slf4j
 @Parameters(commandNames = ['check'], commandDescription = "Performs checks on an artifact")
@@ -34,6 +40,12 @@ class CommandCheck implements Command {
 
     @Parameter(names = ['-l', '--latest'], description = 'Use the latest version')
     Boolean latest
+
+    @Parameter(names = ['-t', '--transitive'], description = 'Check transitive dependencies')
+    Boolean transitive
+
+    @Parameter(names = ['-s', '--scope'], description = 'Sets the dependency scope')
+    String scope
 
     @Override
     void handleRequest(Searcher searcher, Resolver resolver) {
@@ -50,19 +62,27 @@ class CommandCheck implements Command {
             Artifact artifact = resolver.getArtifact(ac).artifact
 
             Map<Dependency> outdatedDependencyMap = [:]
+            CollectResult collectResult
+            DependencyVisitor visitor
 
-            resolver.getDirectDependencies(artifact)?.each { Dependency dependency ->
-                String latest = resolver.getArtifactLatestVersion(dependency.artifact)
-                if (latest != dependency.artifact.version) {
-                    outdatedDependencyMap << ["$dependency.artifact": [
-                            latestVersion: latest,
-                            scope: dependency.scope,
-                            dependency: dependency]
-                    ]
-                    println " - ${"[${dependency.scope}]".padRight(12)} $dependency.artifact $latest"
+            if (transitive) {
+                collectResult = resolver.collectAllDependencies(ac.artifact, scope)
+                log.debug "Dependency root: ${collectResult.root.artifact}"
+                visitor = new CommandLineDumperTransitiveDependencyCheck(resolver)
+            } else {
+                resolver.getDirectDependencies(artifact)?.each { Dependency dependency ->
+                    if (scope && dependency.scope != scope)
+                        return
+                    String latest = resolver.getArtifactLatestVersion(dependency.artifact)
+                    if (latest != dependency.artifact.version) {
+                        outdatedDependencyMap << ["$dependency.artifact": [
+                                latestVersion: latest,
+                                scope        : dependency.scope,
+                                dependency   : dependency]
+                        ]
+                    }
                 }
             }
-
             URL template = this.class.getResource('/com/github/pomes/cli/templates/model/check.txt')
 
             if (template) {
@@ -70,8 +90,11 @@ class CommandCheck implements Command {
 
                 println engine.createTemplate(template)
                         .make([artifact    : artifact,
+                               transitive: transitive,
                                latestVersion: latestVersion,
-                               outdatedDependencies: outdatedDependencyMap])
+                               outdatedDependencies: outdatedDependencyMap,
+                               outdatedTransitiveDependencies: collectResult,
+                                visitor: visitor])
                         .toString()
             } else {
                 System.err.println "Failed to load the requested template"
