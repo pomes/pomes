@@ -2,10 +2,13 @@ Checking $artifact
 
 Version: ${(artifact.version == latestVersion)? "$artifact.version is the latest version": "$artifact is not the latest version ($latestVersion)"}
 
-Outdated direct dependencies:
+Packaging: ${model.packaging} (${packageArtifact.file})
+
+Outdated dependencies:
 <%
 if (transitive) {
     outdatedTransitiveDependencies.root.accept(visitor)
+    out << visitor.output
 } else {
     outdatedDependencies? outdatedDependencies.each { out << " - ${"[${it.value.scope}]".padRight(12)}$it.key (latest: ${it.value.latestVersion})\n"}: ' - none'
 }

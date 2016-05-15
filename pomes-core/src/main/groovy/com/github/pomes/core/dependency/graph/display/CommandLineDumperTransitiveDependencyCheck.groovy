@@ -33,19 +33,21 @@ import static org.eclipse.aether.util.graph.manager.DependencyManagerUtils.getPr
 class CommandLineDumperTransitiveDependencyCheck
         implements DependencyVisitor {
 
-    private PrintStream out
+    private StringBuffer output = new StringBuffer()
 
-    private List<ChildInfo> childInfos = []
+    private final List<ChildInfo> childInfos = []
 
-    private Resolver resolver
+    private final Resolver resolver
 
     CommandLineDumperTransitiveDependencyCheck(Resolver resolver) {
         this.resolver = resolver
     }
 
+    void setOutput(){}
+
     @Override
     boolean visitEnter(DependencyNode node) {
-        out.println "${formatIndentation()}${formatNode(node)}"
+        output <<= "${formatIndentation()}${formatNode(node)}\n"
         childInfos << new ChildInfo(node.children.size())
         true
     }

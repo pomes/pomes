@@ -21,16 +21,14 @@ import com.beust.jcommander.Parameters
 import com.github.pomes.core.ArtifactCoordinate
 import com.github.pomes.core.Resolver
 import com.github.pomes.core.Searcher
-import com.github.pomes.core.dependency.graph.display.CommandLineDumper
 import com.github.pomes.core.dependency.graph.display.CommandLineDumperTransitiveDependencyCheck
 import groovy.text.GStringTemplateEngine
 import groovy.util.logging.Slf4j
+import org.apache.maven.model.Model
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.collection.CollectResult
 import org.eclipse.aether.graph.Dependency
 import org.eclipse.aether.graph.DependencyVisitor
-
-import static org.eclipse.aether.util.artifact.JavaScopes.COMPILE
 
 @Slf4j
 @Parameters(commandNames = ['check'], commandDescription = "Performs checks on an artifact")
@@ -60,6 +58,14 @@ class CommandCheck implements Command {
             }
 
             Artifact artifact = resolver.getArtifact(ac).artifact
+            Model model = resolver.getEffectiveModel(artifact)
+
+            //TODO: Mainly need this if given a POM - not needed(?) if coordinate includes jar
+            ArtifactCoordinate packageAC = new ArtifactCoordinate(groupId: model.groupId,
+                    artifactId: model.artifactId,
+                    version: model.version,
+                    extension: model.packaging)
+            Artifact packageArtifact = resolver.getArtifact(packageAC).artifact
 
             Map<Dependency> outdatedDependencyMap = [:]
             CollectResult collectResult
@@ -89,12 +95,14 @@ class CommandCheck implements Command {
                 GStringTemplateEngine engine = new GStringTemplateEngine()
 
                 println engine.createTemplate(template)
-                        .make([artifact    : artifact,
-                               transitive: transitive,
-                               latestVersion: latestVersion,
-                               outdatedDependencies: outdatedDependencyMap,
+                        .make([artifact                      : artifact,
+                               packageArtifact               : packageArtifact,
+                               model                         : model,
+                               transitive                    : transitive,
+                               latestVersion                 : latestVersion,
+                               outdatedDependencies          : outdatedDependencyMap,
                                outdatedTransitiveDependencies: collectResult,
-                                visitor: visitor])
+                               visitor                       : visitor])
                         .toString()
             } else {
                 System.err.println "Failed to load the requested template"
