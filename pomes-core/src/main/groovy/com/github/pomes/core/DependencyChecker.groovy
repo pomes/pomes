@@ -33,13 +33,12 @@ import java.nio.file.Path
 @Slf4j
 class DependencyChecker {
 
-    static checkDependency (Artifact artifact, Path db, String outputFormat = 'html') {
-        Engine engine = null
-        DatabaseProperties prop = null
+    static checkDependency(Artifact artifact, Path db, String outputFormat = 'html') {
+        Engine engine
+        CveDB cve
+        DatabaseProperties prop
         try {
             engine = new Engine()
-
-            CveDB cve
             try {
                 cve = new CveDB()
                 cve.open()
@@ -47,10 +46,13 @@ class DependencyChecker {
             } catch (DatabaseException ex) {
                 log.debug "Unable to retrieve DB Properties", ex
             } finally {
-                if (cve != null) {
-                    cve.close()
-                }
+                cve?.close()
             }
+        } catch (DatabaseException ex) {
+            log.error 'Unable to connect to the dependency-check database; analysis has stopped'
+            log.debug("", ex);
+        } finally {
+            engine?.cleanup()
         }
     }
 
