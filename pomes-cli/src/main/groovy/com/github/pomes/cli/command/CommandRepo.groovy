@@ -17,24 +17,34 @@
 package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameters
-import com.github.pomes.core.Resolver
-import com.github.pomes.core.Searcher
+import com.github.pomes.cli.Context
 
-@Parameters(commandNames = ['repo'], commandDescription = "Displays repository information")
+@Parameters(commandNames = ['repo'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionRepo')
 class CommandRepo implements Command {
 
     @Override
-    void handleRequest(Searcher searcher, Resolver resolver) {
-        println """\
-Web searching:
- - Primary: ${searcher.primarySearchProvider.displayName} (${searcher.primarySearchProvider.apiUrl})
- - Secondaries:
-   - ${ out -> searcher.alternativeSearchProviders.each { out << "$it.displayName ($it.apiUrl)\n" }}
-
-Maven repositories:
- - Local: ${resolver.localRepository.basedir}
- - Remote:
-${ out -> resolver.remoteRepositories.each { out << "   - $it.id ($it.url)\n" }}
-"""
+    Node handleRequest(Context context) {
+        new NodeBuilder().repo {
+            searching {
+                primary displayName: context.searcher.primarySearchProvider.displayName,
+                        id: context.searcher.primarySearchProvider.id
+                url:
+                context.searcher.primarySearchProvider.apiUrl
+                secondaries {
+                    context.searcher.alternativeSearchProviders.each { provider ->
+                        provider.id displayName: provider.displayName,
+                                url: provider.apiUrl
+                    }
+                }
+            }
+            mavenRepositories {
+                local context.resolver.localRepository.basedir
+                remotes {
+                    context.resolver.remoteRepositories.each { repo ->
+                        repo.id url: repo.url
+                    }
+                }
+            }
+        }
     }
 }

@@ -17,6 +17,8 @@
 package com.github.pomes.cli
 
 import com.github.pomes.cli.command.*
+import groovy.text.GStringTemplateEngine
+import groovy.text.Template
 
 enum CliCommands {
     HELP('help', CommandHelp),
@@ -32,7 +34,7 @@ enum CliCommands {
     final String value
     final Command command
 
-    CliCommands(String value, Class command) {
+    CliCommands(String value, Class<Command> command) {
         this.value = value
         this.command = command.newInstance()
     }
@@ -40,6 +42,13 @@ enum CliCommands {
     static CliCommands lookupCliCommand(String value) {
         for (CliCommands cmd in CliCommands.values()) {
             if (cmd.value == value) return cmd
+        }
+        return null
+    }
+
+    static CliCommands lookupCliCommand(Command command) {
+        for (CliCommands cmd in CliCommands.values()) {
+            if (cmd.command == command) return cmd
         }
         return null
     }

@@ -18,26 +18,32 @@ package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
+import com.github.pomes.cli.Context
+import com.github.pomes.cli.utility.MessageBundle
 import com.github.pomes.core.ArtifactCoordinate
 import com.github.pomes.core.Resolver
-import com.github.pomes.core.Searcher
 import groovy.util.logging.Slf4j
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.version.Version
 
 @Slf4j
-@Parameters(commandNames = ['query'], commandDescription = "Queries a maven repository regarding an artifact")
+@Parameters(commandNames = ['query'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionQuery')
 class CommandQuery implements Command {
-    @Parameter(description = '<coordinates>')
+    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
+
+    @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
 
-    @Parameter(names = ['-l', '--latest'], description = 'Use the latest version')
+    @Parameter(names = ['-l', '--latest'], descriptionKey = 'parameterLatest')
     Boolean latest
 
     @Override
-    void handleRequest(Searcher searcher, Resolver resolver) {
+    Node handleRequest(Context context) {
+        Node response = new Node(null, 'query')
+        Resolver resolver = context.resolver
         coordinates.each { coordinate ->
-            log.debug "Query request for $coordinate (latest requested: $latest)"
+            log.info bundle.getString('log.commandRequest', 'query', coordinate, latest)
+
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
 
             if (latest) {
@@ -46,20 +52,23 @@ class CommandQuery implements Command {
 
             if (ac.version) {
                 List<Artifact> artifacts = resolver.getClassifiersAndExtensions(ac)
-
-                println "${artifacts.size()} available classifiers and extensions for $ac"
-                artifacts.each { artifact ->
-                    println " - $artifact - classifier:'${artifact.classifier}' extension:'${artifact.extension}'"
+                response.append new NodeBuilder()."$coordinate"(count: artifacts.size()) {
+                    artifacts.each { artifact ->
+                        artifact classifier: artifact.classifier,
+                                extension: artifact.extension
+                    }
                 }
             } else {
                 ac = ac.copyWith(version: ArtifactCoordinate.VERSION_OPEN)
                 List<Version> versions = resolver.getArtifactVersions(ac)
-                println "${versions.size()} available versions for $ac"
-                versions.each { version ->
-                    println " - $version"
+                response.append new NodeBuilder()."$coordinate"(count: versions.size(),
+                        latest: resolver.getArtifactLatestVersion(ac)) {
+                    versions.each { version ->
+                        "$version"
+                    }
                 }
-                println "Latest version is: ${resolver.getArtifactLatestVersion(ac)}"
             }
         }
+        return response
     }
 }

@@ -6,6 +6,7 @@ mainClassName = 'com.github.pomes.cli.Cli'
 
 dependencies {
     compile project(':pomes-core')
+    compile project(':pomes-util')
     compile 'com.beust:jcommander:1.48'
     compile 'ch.qos.logback:logback-classic:1.1.3'
 }

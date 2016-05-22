@@ -1,0 +1,21 @@
+<html>
+<head><title>${response.about.program.name[0].value()} - about</title></head>
+<body>
+
+<h1>About ${response.about.program.name[0].value()} v${response.about.program.version[0].value()}</h1>
+
+Licence: ${response.about.program.licence[0].value()}
+
+<h2>Key third-party libraries</h2>
+<ul>
+    <% response.about.thirdPartyLibraries[0].each { lib ->%> <li>${lib.@name} (${lib.@url}) - ${lib.@licence}</li>
+    <% } %>
+</ul>
+<h2>Key services</h2>
+<ul>
+    <% response.about.thirdPartyServices[0].each { service -> %> <li>${service.@name} (${service.@url})</li>
+    <% } %>
+</ul>
+</body>
+</html>
+

@@ -1,0 +1,9 @@
+<html>
+<head><title></title></head>
+<body>
+<% if (response.version) { %>${response.version[0].@name} v${response.version[0].@version}
+<% } else if (response.usage) { %>${response.usage[0].value()}
+<% } else { %>Unable to handle request<% } %>
+</body>
+</html>
+

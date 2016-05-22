@@ -1,0 +1,17 @@
+<html>
+<head><title>Get results</title></head>
+<body>
+<h1>Get results</h1>
+<% response.get.coordinates[0].children().each { coord ->
+    out << "<h2>${coord.@name}</h2>"
+    if (coord.error[0]) {
+        out << "<p>Error: ${coord.error[0].@message}</p>"
+    } else if (coord.result[0]){
+        out << "<p>Local file: ${coord.result[0].@file}</p>"
+        out << "<p>Repository: ${coord.result[0].@repository}</p>"
+    }
+}
+%>
+
+</body>
+</html>

@@ -57,7 +57,7 @@ subprojects {
     apply from: "$rootProject.projectDir/gradle/pom.gradle"
 }
 
-configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli'] }) {
+configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-util'] }) {
     apply plugin: 'groovy'
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'

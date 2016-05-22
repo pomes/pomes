@@ -22,7 +22,10 @@ import org.owasp.dependencycheck.Engine
 import org.owasp.dependencycheck.data.nvdcve.CveDB
 import org.owasp.dependencycheck.data.nvdcve.DatabaseException
 import org.owasp.dependencycheck.data.nvdcve.DatabaseProperties
+import org.owasp.dependencycheck.dependency.Dependency
+import org.owasp.dependencycheck.reporting.ReportGenerator
 
+import javax.json.Json
 import java.nio.file.Path
 
 /**
@@ -33,16 +36,24 @@ import java.nio.file.Path
 @Slf4j
 class DependencyChecker {
 
-    static checkDependency(Artifact artifact, Path db, String outputFormat = 'html') {
+    static String checkDependency(Path db, String applicationName, Artifact... artifacts) {
         Engine engine
         CveDB cve
-        DatabaseProperties prop
+        DatabaseProperties databaseProperties
+
         try {
+            log.info "Scanning artifacts: ${artifacts*.file}"
             engine = new Engine()
+            engine.scan(artifacts*.file)
+            engine.analyzeDependencies()
+            final List<Dependency> dependencies = engine.getDependencies()
             try {
                 cve = new CveDB()
                 cve.open()
-                prop = cve.getDatabaseProperties()
+                databaseProperties = cve.getDatabaseProperties()
+                final ReportGenerator report = new ReportGenerator(applicationName, dependencies, engine.analyzers, databaseProperties)
+
+
             } catch (DatabaseException ex) {
                 log.debug "Unable to retrieve DB Properties", ex
             } finally {

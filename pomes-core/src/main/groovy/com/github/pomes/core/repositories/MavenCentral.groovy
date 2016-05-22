@@ -32,14 +32,14 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE
  */
 @Slf4j
 @ToString
-final class JCenter implements RepositorySearcher {
-    static final String displayName = 'JCenter'
-    static final String id = 'jcenter'
-    static final URL url = 'http://jcenter.bintray.com/'.toURL()
+final class MavenCentral implements RepositorySearcher {
+    static final String displayName = 'Maven Central'
+    static final String id = 'central'
+    static final URL url = 'https://repo1.maven.org/maven2/'.toURL()
     static final String repositoryType = 'default'
-    static final URL apiUrl = 'https://api.bintray.com/search/packages/maven/'.toURL()
+    static final URL apiUrl = 'http://search.maven.org/solrsearch/select'.toURL()
 
-    static RemoteRepository newJCenterRemoteRepository() {
+    static RemoteRepository newMavenCentralRemoteRepository() {
         RemoteRepository.Builder builder = new RemoteRepository.Builder(id, repositoryType, url.toString())
         builder.build()
     }
@@ -50,21 +50,25 @@ final class JCenter implements RepositorySearcher {
                 newClient().
                         target(apiUrl.toURI()).
                         queryParam('q', "$query").
+                        queryParam('wt', 'json').
                         request(APPLICATION_JSON_TYPE).get(String)
-        log.debug "JCenter result for $query: $json"
+        log.debug "$displayName result for $query: $json"
         JsonSlurper slurper = new JsonSlurper()
         mapQueryResults slurper.parseText(json)
     }
 
     @Override
     List<RepositoryWebQueryResult> query(String groupId, String artifactId) {
+        String operator = ''
+        if (groupId && artifactId)
+            operator = '+AND+'
         def json =
                 newClient().
                         target(apiUrl.toURI()).
-                        queryParam('g', "$groupId").
-                        queryParam('a', "$artifactId").
+                        queryParam('q', "g:\"$groupId\"${operator}a:\"$artifactId\"").
+                        queryParam('wt', 'json').
                         request(APPLICATION_JSON_TYPE).get(String)
-        log.debug "JCenter result for $groupId:$artifactId: $json"
+        log.debug "$displayName result for $groupId:$artifactId: $json"
         def slurper = new JsonSlurper()
         mapQueryResults slurper.parseText(json)
     }
@@ -72,30 +76,30 @@ final class JCenter implements RepositorySearcher {
     private List<RepositoryWebQueryResult> mapQueryResults(List queryResults) {
         List<RepositoryWebQueryResult> results = []
         queryResults.each { Map result ->
-            log.debug "Adding result: ${result.system_ids[0]}"
-            def coordinates = result.system_ids[0].tokenize(':')
+            log.debug "Adding result: ${result.id}"
+            def coordinates = result.id.tokenize(':')
             results << new RepositoryWebQueryResult(
-                    groupId: coordinates[0],
-                    artifactId: coordinates[1],
-                    description: result.desc?.replaceAll(/(\r\n|\r|\n)/, ' '),
-                    versions: result.versions,
-                    latestVersion: result.latest_version)
+                    groupId: result.g,
+                    artifactId: result.a,
+                    description: '',
+                    versions: '',
+                    latestVersion: result.v)
         }
         return results
     }
 
     @Override
-    String getId() { JCenter.id }
+    String getId() { MavenCentral.id }
 
     @Override
-    String getDisplayName() { JCenter.displayName }
+    String getDisplayName() { MavenCentral.displayName }
 
     @Override
-    URL getApiUrl() { JCenter.apiUrl }
+    URL getApiUrl() { MavenCentral.apiUrl }
 
     @Override
     RepositorySearcher copy() {
-        return new JCenter()
+        return new MavenCentral()
     }
 
 }

@@ -1,0 +1,23 @@
+<html>
+<head><title>Search results</title></head>
+<body>
+
+<h1>Query: ${response.search[0].results[0].@query}</h1>
+
+<p>Provider: ${response.search[0].results[0].@provider} (${response.search[0].results[0].@providerApi})</p>
+
+<p>Result count: ${response.search[0].results[0].@count}</p>
+
+<% response.search[0].results[0].each{ result -> %>
+<h2>${result.@groupId}:${result.@artifactId}:${result.@latestVersion}</h2>
+
+<p>${result.value()?: 'No description'}</p>
+
+<h3>Versions</h3>
+<ul>
+<% result.@versions.each{ out << "<li>$it</li>"} %>
+</ul>
+<% } %>
+
+</body>
+</html>

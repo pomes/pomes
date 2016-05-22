@@ -1,0 +1,10 @@
+About ${response.about.program.name[0].value()} v${response.about.program.version[0].value()}
+
+Licence: ${response.about.program.licence[0].value()}
+
+Key third-party libraries:
+<% response.about.thirdPartyLibraries[0].each { lib ->%> - ${lib.@name} (${lib.@url}) - ${lib.@licence}
+<% } %>
+Key services:
+<% response.about.thirdPartyServices[0].each { service -> %> - ${service.@name} (${service.@url})
+<% } %>

@@ -1,0 +1,6 @@
+<% response.info.coordinates[0].children().each { coord ->
+    out << "${coord.@name}\n"
+    if (coord.error[0]) {
+        out << "  Error: ${coord.error[0].@message}\n"
+    }
+} %>

@@ -16,39 +16,31 @@
 
 package com.github.pomes.cli.command
 
-import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
 import com.github.pomes.cli.CliCommands
-import com.github.pomes.core.Resolver
-import com.github.pomes.core.Searcher
+import com.github.pomes.cli.Context
 
-@Parameters(commandNames = ['help'], commandDescription = "Displays help information for sub-commands")
+@Parameters(commandNames = ['help'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionHelp')
 class CommandHelp implements Command {
-    @Parameter(description = 'The requested command(s) for which you seek help')
+    @Parameter(descriptionKey = 'parameterSubCommand')
     List<String> helpSubCommands = []
 
     @Override
-    void handleRequest(Searcher searcher, Resolver resolver) {
-        /*
-         * TODO: This is not efficient, it repeats the block in Cli
-         */
-        JCommander jc = new JCommander()
-        CliCommands.values().each { cmd ->
-            jc.addCommand cmd.command
-        }
-        // End of todo
-
-        StringBuilder out = new StringBuilder()
-
-        if (helpSubCommands[0]) {
-            jc.usage(helpSubCommands[0], out)
+    Node handleRequest(Context context) {
+        Node response = new Node(null, 'help')
+        if (helpSubCommands) {
+            helpSubCommands.each {
+                StringBuilder out = new StringBuilder()
+                context.jCommander.usage(it, out)
+                new Node(response, it, out.toString())
+            }
         } else {
-            out << 'Please select a command:\n'
-            jc.commands.findAll { key, value -> key != CliCommands.HELP }.each { cmdObj ->
-                out << "  ${"$cmdObj.key:".padRight(15)}${jc.getCommandDescription(cmdObj.key)} \n"
+            context.jCommander.commands.each { cmdObj ->
+                //cmdObj.key(context.jCommander.getCommandDescription(cmdObj.key))
+                new Node(response, cmdObj.key, context.jCommander.getCommandDescription(cmdObj.key))
             }
         }
-        println out
+        return response
     }
 }

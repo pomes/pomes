@@ -18,6 +18,8 @@ package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
+import com.github.pomes.cli.Context
+import com.github.pomes.cli.utility.MessageBundle
 import com.github.pomes.core.ArtifactClassifier
 import com.github.pomes.core.ArtifactCoordinate
 import com.github.pomes.core.ArtifactExtension
@@ -28,70 +30,77 @@ import org.eclipse.aether.resolution.ArtifactResolutionException
 import org.eclipse.aether.resolution.ArtifactResult
 
 @Slf4j
-@Parameters(commandNames = ['get'], commandDescription = "Gets (installs) an artifact. Default request is for POM file.")
+@Parameters(commandNames = ['get'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionGet')
 class CommandGet implements Command {
-    @Parameter(description = '<coordinates>')
+    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
+
+    @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
 
-    @Parameter(names = ['-l', '--latest'], description = 'Use the latest version')
+    @Parameter(names = ['-l', '--latest'], descriptionKey = 'parameterLatest')
     Boolean latest = false
 
-    @Parameter(names = ['-e', '--extension'], description = 'Request a specific packaging type (e.g. pom or jar)')
+    @Parameter(names = ['-e', '--extension'], descriptionKey = 'parameterExtension')
     String extension
 
-    @Parameter(names = ['-c', '--classifier'], description = 'Request a specific classifier (e.g. javadoc or sources)')
+    @Parameter(names = ['-c', '--classifier'], descriptionKey = 'parameterClassifier')
     String classifier
 
     @Override
-    void handleRequest(Searcher searcher, Resolver resolver) {
+    Node handleRequest(Context context) {
+        Node response = new Node(null, 'get')
+        Node coordinatesNode = new Node(response, 'coordinates')
         coordinates.each { coordinate ->
-            log.debug "Get request for $coordinate (latest requested: $latest)"
+            Node coordinateNode = new Node(coordinatesNode, 'coordinate', [name: coordinate])
+            log.info bundle.getString('log.commandRequest', 'get', coordinate, latest)
 
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
 
-            log.debug "Initial parsed coordinates: $ac"
+            log.debug bundle.getString('log.initialParsedCoordinates', ac)
 
             if (extension) {
                 ac = ac.copyWith(extension: extension)
                 if (! ArtifactExtension.values().contains(extension)) {
-                    log.warn "The extension ($extension) may not be valid "
+                    log.warn bundle.getString('log.possibleInvalidExtension', extension)
                 }
             }
 
             if (classifier) {
                 ac = ac.copyWith(classifier: classifier)
                 if (! ArtifactClassifier.values().contains(classifier)) {
-                    log.warn "The classifier ($classifier) may not be valid "
+                    log.warn bundle.getString('log.possibleInvalidClassifier', classifier)
                 }
             }
 
             if (latest) {
                 String latestVersion = resolver.getArtifactLatestVersion(ac.artifact)
                 ac = ac.copyWith(version: latestVersion)
-                log.debug("Determined latest version for $coordinate is $latestVersion. Using $ac")
+                log.debug bundle.getString('log.determinedLatestVersion', coordinate,latestVersion,ac)
             }
 
             if (!ac.version && !latest) {
-                System.err.println "Coordinate requires a version (or request latest)"
-                System.exit(-1)
+                new Node(coordinateNode, 'error', [message: bundle.getString('error.noVersion', ac)])
+                return
             }
 
             ArtifactResult result
 
             try {
-                result = resolver.getArtifact(ac.artifact)
+                result = context.resolver.getArtifact(ac.artifact)
             } catch (ArtifactResolutionException are) {
-                System.err.println "Received a resolution exception for ${ac.artifact}: ${are.message}"
-                System.exit(-1)
+                new Node(coordinateNode, 'error', [message: bundle.getString('error.resolutionException', ac, are.message)])
+                return
             }
+
             if (result?.resolved) {
-                println "Coordinates: $result.artifact"
-                println "Repository: ${result.repository.toString()}"
-                println "Local copy: ${result.artifact.file.absoluteFile.toString()}"
+                new Node (coordinateNode, 'result', [
+                    repository: result.repository.toString(),
+                    file: result.artifact.file.absoluteFile.toString()])
             } else {
-                System.err.println "Could not resolve ${ac.artifact}"
-                System.exit(-1)
+                new Node(coordinateNode, 'error', [message: bundle.getString('error.couldNotResolveArtifact', ac)])
+                return
             }
         }
+        return response
     }
 }

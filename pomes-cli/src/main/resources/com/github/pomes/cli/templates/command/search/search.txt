@@ -1,0 +1,9 @@
+Query: ${response.search[0].results[0].@query}
+Provider: ${response.search[0].results[0].@provider} (${response.search[0].results[0].@providerApi})
+Result count: ${response.search[0].results[0].@count}
+<% response.search[0].results[0].each{ result -> %>
+${result.@groupId}:${result.@artifactId}:${result.@latestVersion}
+${result.value()? utilities.breakupLongString(result.value(), 80, 4): '    No description'}
+    Versions:
+${utilities.breakupLongString(result.@versions.toString(), 80, 6)}
+<% } %>

@@ -14,10 +14,14 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli.command
+package com.github.pomes.cli
 
-import com.github.pomes.cli.Context
+import com.beust.jcommander.JCommander
+import com.github.pomes.core.Resolver
+import com.github.pomes.core.Searcher
 
-interface Command {
-    Node handleRequest(Context context)
+class Context {
+    JCommander jCommander
+    Searcher searcher
+    Resolver resolver
 }

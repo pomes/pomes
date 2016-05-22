@@ -18,6 +18,8 @@ package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
+import com.github.pomes.cli.Context
+import com.github.pomes.cli.utility.MessageBundle
 import com.github.pomes.core.ArtifactCoordinate
 import com.github.pomes.core.Resolver
 import com.github.pomes.core.Searcher
@@ -28,21 +30,27 @@ import org.eclipse.aether.collection.CollectResult
 import static org.eclipse.aether.util.artifact.JavaScopes.COMPILE
 
 @Slf4j
-@Parameters(commandNames = ['dependencies'], commandDescription = "Displays dependency information for an artifact")
+@Parameters(commandNames = ['dependencies'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionDependencies')
 class CommandDependencies implements Command {
-    @Parameter(description = '<coordinates>')
+
+    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
+
+    @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
 
-    @Parameter(names = ['-l', '--latest'], description = 'Use the latest version')
+    @Parameter(names = ['-l', '--latest'], descriptionKey = 'parameterLatest')
     Boolean latest
 
-    @Parameter(names = ['-s', '--scope'], description = 'Sets the dependency scope')
+    @Parameter(names = ['-s', '--scope'], description = 'parameterScope')
     String scope = COMPILE
 
     @Override
-    void handleRequest(Searcher searcher, Resolver resolver) {
+    Node handleRequest(Context context) {
+        Resolver resolver = context.resolver
+        Node response = new Node(null, 'dependencies')
         coordinates.each { coordinate ->
-            log.debug "Dependencies request for $coordinate (latest requested: $latest)"
+            log.info bundle.getString('log.commandRequest', 'dependencies', coordinate, latest)
+
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
 
             if (latest) {
@@ -50,10 +58,11 @@ class CommandDependencies implements Command {
             }
 
             CollectResult collectResult = resolver.collectAllDependencies(ac.artifact, scope)
-            log.debug "Dependency root: ${collectResult.root.artifact}"
+            log.debug bundle.getString('log.dependencyRoot', 'info', collectResult.root.artifact)
 
-            println "Dependencies for $ac (scope: $scope)"
-            collectResult.root.accept(new CommandLineDumper())
+            new Node(response,'collectResult', collectResult)
+            //collectResult.root.accept(new CommandLineDumper())
         }
+        return response
     }
 }

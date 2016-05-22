@@ -14,10 +14,8 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli.command
+package com.github.pomes.util
 
-import com.github.pomes.cli.Context
+class Settings {
 
-interface Command {
-    Node handleRequest(Context context)
 }

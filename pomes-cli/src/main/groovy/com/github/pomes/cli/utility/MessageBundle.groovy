@@ -14,10 +14,19 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli.command
+package com.github.pomes.cli.utility
 
-import com.github.pomes.cli.Context
+import java.text.MessageFormat
 
-interface Command {
-    Node handleRequest(Context context)
+class MessageBundle {
+
+    final ResourceBundle bundle
+
+    MessageBundle(ResourceBundle rb) {
+        bundle = rb
+    }
+
+    String getString(String key, Object... params) {
+        MessageFormat.format bundle.getString(key), params
+    }
 }

@@ -14,10 +14,21 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli.command
+package com.github.pomes.cli.utility
 
-import com.github.pomes.cli.Context
+enum OutputFormat {
+    text('text', 'txt'),
+    xml('xml', 'xml'),
+    html('html', 'html'),
+    raw('raw', 'node')
 
-interface Command {
-    Node handleRequest(Context context)
+    //YAML('yaml', 'yaml'),
+    //JSON('json', 'json'),
+
+    String value, extension
+
+    OutputFormat(String value, String extension) {
+        this.value = value
+        this.extension = extension
+    }
 }

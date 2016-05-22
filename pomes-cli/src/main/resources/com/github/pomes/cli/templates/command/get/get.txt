@@ -1,0 +1,9 @@
+<% response.get.coordinates[0].children().each { coord ->
+    out << "${coord.@name}\n"
+    if (coord.error[0]) {
+        out << "  Error: ${coord.error[0].@message}\n"
+    } else if (coord.result[0]){
+        out << "  Local file: ${coord.result[0].@file}\n"
+        out << "  Repository: ${coord.result[0].@repository}\n"
+    }
+} %>

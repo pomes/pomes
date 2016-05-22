@@ -18,11 +18,10 @@ package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
+import com.github.pomes.cli.Context
+import com.github.pomes.cli.utility.MessageBundle
 import com.github.pomes.core.ArtifactCoordinate
 import com.github.pomes.core.Resolver
-import com.github.pomes.core.Searcher
-import com.github.pomes.core.dependency.graph.display.CommandLineDumperTransitiveDependencyCheck
-import groovy.text.GStringTemplateEngine
 import groovy.util.logging.Slf4j
 import org.apache.maven.model.Model
 import org.eclipse.aether.artifact.Artifact
@@ -31,24 +30,28 @@ import org.eclipse.aether.graph.Dependency
 import org.eclipse.aether.graph.DependencyVisitor
 
 @Slf4j
-@Parameters(commandNames = ['check'], commandDescription = "Performs checks on an artifact")
+@Parameters(commandNames = ['check'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = "commandDescriptionCheck")
 class CommandCheck implements Command {
-    @Parameter(description = '<coordinates>')
+    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
+
+    @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
 
-    @Parameter(names = ['-l', '--latest'], description = 'Use the latest version')
+    @Parameter(names = ['-l', '--latest'], descriptionKey = 'parameterLatest')
     Boolean latest
 
-    @Parameter(names = ['-t', '--transitive'], description = 'Check transitive dependencies')
+    @Parameter(names = ['-t', '--transitive'], description = 'parameterTransitive')
     Boolean transitive
 
-    @Parameter(names = ['-s', '--scope'], description = 'Sets the dependency scope')
+    @Parameter(names = ['-s', '--scope'], description = 'parameterScope')
     String scope
 
     @Override
-    void handleRequest(Searcher searcher, Resolver resolver) {
+    Node handleRequest(Context context) {
+        Resolver resolver = context.resolver
+        Node response = new Node(null, 'check')
         coordinates.each { coordinate ->
-            log.debug "Check request for $coordinate (latest requested: $latest)"
+            log.info bundle.getString('log.commandRequest', 'check', coordinate, latest)
 
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
             String latestVersion = resolver.getArtifactLatestVersion(ac)
@@ -71,24 +74,32 @@ class CommandCheck implements Command {
             CollectResult collectResult
             DependencyVisitor visitor
 
+            /*
+            TODO: Re-enable once node work is complete
             if (transitive) {
                 collectResult = resolver.collectAllDependencies(ac.artifact, scope)
-                log.debug "Dependency root: ${collectResult.root.artifact}"
-                visitor = new CommandLineDumperTransitiveDependencyCheck(resolver)
+                log.debug bundle.getString('log.dependencyRoot', 'info', collectResult.root.artifact)
+                //visitor = new CommandLineDumperTransitiveDependencyCheck(resolver)
+                new Node(response,'collectResult', collectResult)
             } else {
-                resolver.getDirectDependencies(artifact)?.each { Dependency dependency ->
-                    if (scope && dependency.scope != scope)
-                        return
-                    String latest = resolver.getArtifactLatestVersion(dependency.artifact)
-                    if (latest != dependency.artifact.version) {
-                        outdatedDependencyMap << ["$dependency.artifact": [
-                                latestVersion: latest,
-                                scope        : dependency.scope,
-                                dependency   : dependency]
-                        ]
-                    }
-                }
+            */
+
+            response.append new NodeBuilder().outdatedDependencies {
+                resolver.getDirectDependencies(artifact)?.
+                        findAll { scope && (it.scope != scope) }?.
+                        each { Dependency dependency ->
+                            String latest = resolver.getArtifactLatestVersion(dependency.artifact)
+                            if (latest != dependency.artifact.version) {
+                                "$dependency.artifact"(
+                                        latestVersion: latest,
+                                        scope: dependency.scope,
+                                        dependency: dependency)
+                            }
+                        }
             }
+
+            /*
+            TODO: Remove
             URL template = this.class.getResource('/com/github/pomes/cli/templates/model/check.txt')
 
             if (template) {
@@ -108,6 +119,8 @@ class CommandCheck implements Command {
                 System.err.println "Failed to load the requested template"
                 System.exit(-1)
             }
+            */
         }
+        return response
     }
 }
