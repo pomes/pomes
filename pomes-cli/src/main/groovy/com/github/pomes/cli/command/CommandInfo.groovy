@@ -68,80 +68,132 @@ class CommandInfo implements Command {
             Artifact artifact = resolver.getArtifact(ac).artifact
             Model effectiveModel = resolver.getEffectiveModel(artifact)
 
+            //This is needed to fully report on the dependencies
             List<Dependency> dependencyList = resolver.getDirectDependencies(artifact)
 
-            coordinateNode.append new NodeBuilder().artifact {
-                model(name: effectiveModel.toString(),
-                        artifactId: effectiveModel.artifactId,
-                        groupId: effectiveModel.groupId,
-                        version: effectiveModel.version,
-                        packaging: effectiveModel.packaging,
-                        inceptionYear: effectiveModel.inceptionYear,
-                        description: effectiveModel.description) {
+            coordinateNode.append new NodeBuilder().artifact(name: effectiveModel.toString(),
+                    artifactId: effectiveModel.artifactId,
+                    groupId: effectiveModel.groupId,
+                    version: effectiveModel.version,
+                    packaging: effectiveModel.packaging,
+                    inceptionYear: effectiveModel.inceptionYear,
+                    description: effectiveModel.description) {
+
+                if (effectiveModel.parent) {
                     parent(name: effectiveModel.parent?.toString(),
                             artifactId: effectiveModel.parent?.artifactId,
                             groupId: effectiveModel.parent?.groupId,
                             version: effectiveModel.parent?.version)
+                }
+                if (effectiveModel.organization) {
                     organization(name: effectiveModel.organization?.name,
                             url: effectiveModel.organization?.url)
+                }
+                if (effectiveModel.licenses) {
                     licenses {
                         effectiveModel.licenses.each { lic ->
-                            license(name: lic.name,
-                                    url: lic.url,
-                                    distribution: lic.distribution,
-                                    comments: lic.comments)
-                        }
-                    }
-                    scm(connection: effectiveModel.scm?.connection,
-                            url: effectiveModel.scm?.url,
-                            developerConnection: effectiveModel.scm?.developerConnection
-                    )
-                    ciManagement(system: effectiveModel.ciManagement?.system,
-                            url: effectiveModel.ciManagement?.url)
-                    issueManagement(system: effectiveModel.issueManagement?.system,
-                            url: effectiveModel.issueManagement?.url)
-                    mailingLists {
-                        effectiveModel.mailingLists.each { ml ->
-                            mailingList(name: ml.name,
-                                    archive: ml.archive)
+                            license(name: lic.name ?: '',
+                                    url: lic.url ?: '',
+                                    distribution: lic.distribution ?: '',
+                                    comments: lic.comments ?: '')
                         }
                     }
                 }
-                dependencies {
-                    dependencyList.sort(false, { it.scope }).each { dep ->
-                        dependency(name: dep.artifact.toString(),
-                                scope: dep.scope,
-                                optional: dep.optional) {
-                            exclusions {
-                                dep.exclusions.each { ex ->
-                                    exclusion(artifactId: ex.artifactId,
-                                            groupId: ex.groupId,
-                                            classifier: ex.classifier,
-                                            extension: ex.extension
-                                    )
+                if (effectiveModel.scm) {
+                scm(connection: effectiveModel.scm.connection?:'',
+                        url: effectiveModel.scm.url?:'',
+                        developerConnection: effectiveModel.scm.developerConnection?:'')
+                }
+                if (effectiveModel.ciManagement) {
+                    ciManagement(system: effectiveModel.ciManagement.system?:'',
+                        url: effectiveModel.ciManagement.url?:'')
+                }
+                if (effectiveModel.issueManagement) {
+                    issueManagement(system: effectiveModel.issueManagement.system?:'',
+                            url: effectiveModel.issueManagement.url?:'')
+                }
+                if (effectiveModel.mailingLists) {
+                    mailingLists {
+                        effectiveModel.mailingLists.each { ml ->
+                            mailingList(name: ml.name?:'',
+                                    archive: ml.archive?:'')
+                        }
+                    }
+                }
+                if (effectiveModel.profiles) {
+                    profiles {
+                        effectiveModel.profiles.each { pr ->
+                            profile(id: pr.id)
+                        }
+                    }
+                }
+                if (effectiveModel.developers) {
+                    developers {
+                        effectiveModel.developers.each { co ->
+                            contributor(name: co.name,
+                                    url: co.url ?: '',
+                                    email: co.email ?: '') {
+                                if (co.organization || co.organizationUrl) {
+                                    organization(name: co.organization ?: '',
+                                            url: co.organizationUrl ?: '')
+                                }
+                                if (co.roles) {
+                                    roles {
+                                        co.roles.each { ro ->
+                                            role(ro)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (effectiveModel.contributors) {
+                    contributors {
+                        effectiveModel.contributors.each { co ->
+                            contributor(name: co.name,
+                                    url: co.url ?: '',
+                                    email: co.email ?: '') {
+                                if (co.organization || co.organizationUrl) {
+                                    organization(name: co.organization ?: '',
+                                            url: co.organizationUrl ?: '')
+                                }
+                                if (co.roles) {
+                                    roles {
+                                        co.roles.each { ro ->
+                                            role(ro)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (dependencyList) {
+                    dependencies {
+                        dependencyList.sort(false, { it.scope }).each { dep ->
+                            dependency(name: dep.artifact.toString(),
+                                    artifactId: dep.artifact.artifactId,
+                                    groupId: dep.artifact.groupId,
+                                    version: dep.artifact.version,
+                                    scope: dep.scope,
+                                    classifier: dep.artifact.classifier,
+                                    extension: dep.artifact.extension,
+                                    optional: dep.optional) {
+                                exclusions {
+                                    dep.exclusions.each { ex ->
+                                        exclusion(artifactId: ex.artifactId,
+                                                groupId: ex.groupId,
+                                                classifier: ex.classifier,
+                                                extension: ex.extension
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-
-            /*
-            TODO: delete once template model is in place
-            URL template = this.class.getResource('/com/github/pomes/cli/templates/model/details.txt')
-
-            if (template) {
-                GStringTemplateEngine engine = new GStringTemplateEngine()
-
-                println engine.createTemplate(template)
-                        .make([model       : model,
-                               dependencies: dependencyList.sort(false, { it.scope })])
-                        .toString()
-            } else {
-                System.err.println "Failed to load the requested template"
-                System.exit(-1)
-            }
-            */
         }
         return response
     }
