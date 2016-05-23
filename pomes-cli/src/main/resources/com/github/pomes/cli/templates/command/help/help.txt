@@ -1,2 +1,2 @@
-<% response.help[0].each { item -> %>${item.name()}: ${item.value()}
+<% response.help[0].each { item -> %>${item.name().padRight(12)}: ${item.value()}
 <% } %>
