@@ -25,9 +25,7 @@ import com.github.pomes.core.Resolver
 import groovy.util.logging.Slf4j
 import org.apache.maven.model.Model
 import org.eclipse.aether.artifact.Artifact
-import org.eclipse.aether.collection.CollectResult
 import org.eclipse.aether.graph.Dependency
-import org.eclipse.aether.graph.DependencyVisitor
 
 @Slf4j
 @Parameters(commandNames = ['check'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = "commandDescriptionCheck")
@@ -40,17 +38,19 @@ class CommandCheck implements Command {
     @Parameter(names = ['-l', '--latest'], descriptionKey = 'parameterLatest')
     Boolean latest
 
-    @Parameter(names = ['-t', '--transitive'], description = 'parameterTransitive')
-    Boolean transitive
+    //@Parameter(names = ['-t', '--transitive'], description = 'parameterTransitive')
+    //Boolean transitive
 
-    @Parameter(names = ['-s', '--scope'], description = 'parameterScope')
-    String scope
+    //@Parameter(names = ['-s', '--scope'], description = 'parameterScope')
+    //String scope
 
     @Override
     Node handleRequest(Context context) {
         Resolver resolver = context.resolver
         Node response = new Node(null, 'check')
+        Node coordinatesNode = new Node(response, 'coordinates')
         coordinates.each { coordinate ->
+            Node coordinateNode = new Node(coordinatesNode, 'coordinate', [name: coordinate])
             log.info bundle.getString('log.commandRequest', 'check', coordinate, latest)
 
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
@@ -61,21 +61,38 @@ class CommandCheck implements Command {
             }
 
             Artifact artifact = resolver.getArtifact(ac).artifact
-            Model model = resolver.getEffectiveModel(artifact)
+            Node outdatedDependencies = new Node(coordinateNode, 'outdatedDependencies')
+            resolver.getDirectDependencies(artifact)?.each { Dependency dependency ->
+                String latest = resolver.getArtifactLatestVersion(dependency.artifact)
+                if (latest != dependency.artifact.version) {
+                    new Node(outdatedDependencies, 'dependency', [
+                            latestVersion: latest,
+                            name         : dependency.artifact.toString(),
+                            artifactId   : dependency.artifact.artifactId,
+                            groupId      : dependency.artifact.groupId,
+                            version      : dependency.artifact.version,
+                            scope        : dependency.scope,
+                            classifier   : dependency.artifact.classifier,
+                            extension    : dependency.artifact.extension,
+                            optional     : dependency.optional])
+                }
+            }
 
+            //Model model = resolver.getEffectiveModel(artifact)
+
+            /*
             //TODO: Mainly need this if given a POM - not needed(?) if coordinate includes jar
             ArtifactCoordinate packageAC = new ArtifactCoordinate(groupId: model.groupId,
                     artifactId: model.artifactId,
                     version: model.version,
                     extension: model.packaging)
             Artifact packageArtifact = resolver.getArtifact(packageAC).artifact
-
-            Map<Dependency> outdatedDependencyMap = [:]
-            CollectResult collectResult
-            DependencyVisitor visitor
-
+            */
             /*
             TODO: Re-enable once node work is complete
+            //Map<Dependency> outdatedDependencyMap = [:]
+            //CollectResult collectResult
+            //DependencyVisitor visitor
             if (transitive) {
                 collectResult = resolver.collectAllDependencies(ac.artifact, scope)
                 log.debug bundle.getString('log.dependencyRoot', 'info', collectResult.root.artifact)
@@ -84,6 +101,7 @@ class CommandCheck implements Command {
             } else {
             */
 
+            /*
             response.append new NodeBuilder().outdatedDependencies {
                 resolver.getDirectDependencies(artifact)?.
                         findAll { scope && (it.scope != scope) }?.
@@ -97,7 +115,7 @@ class CommandCheck implements Command {
                             }
                         }
             }
-
+            */
             /*
             TODO: Remove
             URL template = this.class.getResource('/com/github/pomes/cli/templates/model/check.txt')

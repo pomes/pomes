@@ -1,0 +1,9 @@
+<% response.check.coordinates[0].children().each { coord -> %>${coord.@name}
+<% if (coord.error[0]) { %>    Error: ${coord.error[0].@message}
+<% } else { %>
+    Outdated dependencies:<% coord.outdatedDependencies[0].each { dep -> %>
+     - ${dep.@scope.padRight(12)}${dep.@name} (new: ${dep.@latestVersion}) <% } %>
+<%
+}
+}
+%>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><title>Check results</title></head>
+<body>
+<h1>Check results</h1>
+
+<p>Requested coordinates:</p>
+<ul>
+    <% response.check.coordinates[0].children().each { coord -> %>
+    <li><a href="#${coord.@name}">${coord.@name}</a></li>
+    <% } %>
+</ul>
+
+<% response.check.coordinates[0].children().each { coord -> %>
+<h2>${coord.@name}</h2>
+<a name="${coord.@name}"></a>
+<% if (coord.error[0]) { %>
+<p>Error: ${coord.error[0].@message}</p>
+<% } else { %>
+<h3>Outdated dependencies</h3>
+<table>
+    <tr>
+        <th>Scope</th>
+        <th>Dependency</th>
+        <th>Latest version</th>
+    </tr>
+    <% coord.outdatedDependencies[0].each { dep -> %>
+    <tr>
+        <td>${dep.@scope}</td>
+        <td>${dep.@name}</td>
+        <td>${dep.@latestVersion}</td>
+    </tr>
+    <% } %>
+</table>
+<%
+}
+}
+%>
+</body>
+</html>
