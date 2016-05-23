@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head><title>Info results</title></head>
+<body>
+<h1>Info results</h1>
+<% response.info.coordinates[0].children().each { coord ->
+%><h2>${coord.@name}</h2> <%
+if (coord.error[0]) {
+%> <p>Error: ${coord.error[0].@message}</p> <%
+} else {
+coord.artifact[0].with { model -> %>
+<table>
+    <tr>
+        <th>Name</th>
+        <td>${model.@name}</td>
+    </tr>
+
+    <tr>
+        <th>Description</th>
+        <td>${model.@description}</td>
+    </tr>
+
+    <tr>
+        <th>Inception year</th>
+        <td>${model.@inceptionYear}</td>
+    </tr>
+
+    <tr>
+        <th>Maven coordinates</th>
+        <td>
+            <ul>
+                <li>Group ID: ${model.@groupId}</li>
+                <li>Artifact ID: ${model.@artifactId}</li>
+                <li>Version: ${model.@version}</li>
+                <li>Classifier: ${model.@classifier}</li>
+                <li>Packaging: ${model.@packaging}</li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr>
+        <th>Project directory</th>
+        <td>${model.@projectDirectory}</td>
+    </tr>
+
+    <tr>
+        <th>Parent</th>
+        <td>${model.parent? model.parent.@name: 'none'}</td>
+    </tr>
+
+    <tr>
+        <th>Organisation:</th>
+        <td>
+            <ul>
+                <li>Name: ${model.organization? model.organization[0].@name: 'none'}</li>
+                <li>URL: ${model.organization? model.organization[0].@url: 'none'}</li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <th>Licence(s)</th>
+        <td>
+            <ul>
+                <% model.licenses[0]?.each { %>
+                <li>${it.@name} (${it.@url})</li>
+                <% } %>
+            </ul>
+        </td>
+    </tr>
+
+    <tr>
+        <th>SCM</th>
+        <td>
+            <ul>
+                <li>URL: ${model.scm[0]?.@url}</li>
+                <li>Connection: ${model.scm[0]?.@connection}</li>
+                <li>Developer connection: ${model.scm[0]?.@developerConnection}</li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr>
+        <th>CI:</th>
+        <td>
+            <ul>
+                <li> System: ${model.ciManagement[0]?.@system}</li>
+                <li>URL: ${model.ciManagement[0]?.@url}</li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr>
+        <th>Issue management:</th>
+        <td>
+            <ul>
+                <li>System: ${model.issueManagement[0]?.@system}</li>
+                <li>URL: ${model.issueManagement[0]?.@url}</li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr>
+        <th>Mailing lists:</th>
+        <td>
+            <ul>
+                <% model.mailingLists[0]?.each { %>
+                <li>${it.@name} (${it.@archive})</li>
+                <% } %>
+            </ul>
+        </td>
+    </tr>
+
+    <tr>
+        <th>Direct dependencies</th>
+        <td>
+            <table>
+                <tr>
+                    <th>Scope</th>
+                    <th>Artifact</th>
+                    <th>Optional</th>
+                    <th>Exclusions</th>
+                </tr>
+                <% model.dependencies[0].each { %>
+                <tr>
+                    <td>${it.@scope}</td>
+                    <td>${it.@name}</td>
+                    <td>${it.@optional? 'Y': ''}</td>
+                    <td>${it.exclusions[0]?.exclusion? it.exclusions[0].exclusion.@name:''}</td>
+                </tr>
+                <% } %>
+            </table>
+        </td>
+    </tr>
+</table>
+<%
+}
+}
+} %>
+</body>
+</html>
