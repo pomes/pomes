@@ -39,8 +39,8 @@ class CommandInfo implements Command {
     @Parameter(names = ['-l', '--latest'], descriptionKey = 'parameterLatest')
     Boolean latest
 
-    @Parameter(names = ['-s', '--scope'], descriptionKey = 'parameterScope')
-    String scope = 'compile'
+    //@Parameter(names = ['-s', '--scope'], descriptionKey = 'parameterScope')
+    //String scope = 'compile'
 
     @Override
     Node handleRequest(Context context) {
@@ -77,7 +77,8 @@ class CommandInfo implements Command {
                     version: effectiveModel.version,
                     packaging: effectiveModel.packaging,
                     inceptionYear: effectiveModel.inceptionYear,
-                    description: effectiveModel.description) {
+                    description: effectiveModel.description,
+                    projectDirectory: effectiveModel.projectDirectory.absolutePath) {
 
                 if (effectiveModel.parent) {
                     parent(name: effectiveModel.parent?.toString(),
@@ -182,7 +183,8 @@ class CommandInfo implements Command {
                                     optional: dep.optional) {
                                 exclusions {
                                     dep.exclusions.each { ex ->
-                                        exclusion(artifactId: ex.artifactId,
+                                        exclusion(name: ex.toString(),
+                                                artifactId: ex.artifactId,
                                                 groupId: ex.groupId,
                                                 classifier: ex.classifier,
                                                 extension: ex.extension

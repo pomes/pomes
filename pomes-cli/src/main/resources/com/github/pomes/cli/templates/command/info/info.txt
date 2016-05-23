@@ -2,5 +2,51 @@
     out << "${coord.@name}\n"
     if (coord.error[0]) {
         out << "  Error: ${coord.error[0].@message}\n"
+    } else {
+        coord.artifact[0].with { model -> %>
+    Name: ${model.@name}
+
+    Description: ${model.@description}
+
+    Inception year: ${model.@inceptionYear}
+
+    Maven coordinates:
+     - Group ID: ${model.@groupId}
+     - Artifact ID: ${model.@artifactId}
+     - Version: ${model.@version}
+     - Classifier: ${model.@classifier}
+     - Packaging: ${model.@packaging}
+
+    Project directory: ${model.@projectDirectory}
+
+    Parent: ${model.parent? model.parent.@name: 'none'}
+
+    Organisation:
+     - Name: ${model.organization? model.organization[0].@name: 'none'}
+     - URL: ${model.organization? model.organization[0].@url: 'none'}
+
+    Licence(s):
+    <% model.licenses[0]?.each { %> - ${it.@name} (${it.@url}) <% } %>
+
+    SCM:
+     - URL: ${model.scm[0]?.@url}
+     - Connection: ${model.scm[0]?.@connection}
+     - Developer connection: ${model.scm[0]?.@developerConnection}
+
+    CI:
+     - System: ${model.ciManagement[0]?.@system}
+     - URL: ${model.ciManagement[0]?.@url}
+
+    Issue management:
+     - System: ${model.issueManagement[0]?.@system}
+     - URL: ${model.issueManagement[0]?.@url}
+
+    Mailing lists:<% model.mailingLists[0]?.each { %>
+        - ${it.@name} (${it.@archive}) <% } %>
+
+    Direct dependencies:<% model.dependencies[0].each { %>
+     - ${it.@scope.padRight(12)} ${it.@name} ${it.@optional? '(optional)': ''} ${it.exclusions[0]?.exclusion? 'excludes:' << it.exclusions[0].exclusion.@name:''}<% } %>
+    <%
+    }
     }
 } %>
