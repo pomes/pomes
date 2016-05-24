@@ -120,6 +120,17 @@ coord.artifact[0].with { model -> %>
     </tr>
 
     <tr>
+        <th>Classifiers and extensions</th>
+        <td>
+            <ul>
+                <% model.classifiersAndExtensions[0]?.each { %>
+                <li>${it.@name}</li>
+                <% } %>
+            </ul>
+        </td>
+    </tr>
+
+    <tr>
         <th>Direct dependencies</th>
         <td>
             <table>

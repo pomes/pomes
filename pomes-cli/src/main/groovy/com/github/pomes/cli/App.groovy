@@ -1,6 +1,13 @@
 package com.github.pomes.cli
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder
+import ch.qos.logback.core.FileAppender
+import ch.qos.logback.core.rolling.TimeBasedRollingPolicy
 import com.beust.jcommander.*
+import com.github.pomes.cli.utility.LogLevel
 import com.github.pomes.cli.utility.MessageBundle
 import com.github.pomes.cli.utility.OutputFormat
 import com.github.pomes.cli.utility.TemplateUtilities
@@ -10,6 +17,7 @@ import com.github.pomes.core.repositories.JCenter
 import groovy.text.GStringTemplateEngine
 import groovy.util.logging.Slf4j
 import groovy.xml.XmlUtil
+import org.slf4j.LoggerFactory
 
 import java.nio.file.Files
 import java.util.ResourceBundle
@@ -30,10 +38,11 @@ import java.util.ResourceBundle
  *    limitations under the License.
  */
 
+
+
 @Slf4j
 @Parameters(resourceBundle = 'com.github.pomes.cli.MessageBundle')
 class App {
-
     MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
 
     final String programVersion = bundle.getString('programVersion')
@@ -46,6 +55,9 @@ class App {
 
     @Parameter(names = ['-v', '--version'], descriptionKey = 'parameterVersion')
     Boolean version
+
+    @Parameter(names = ['--logging'], descriptionKey = 'parameterLogging')
+    LogLevel logging = LogLevel.error
 
     @Parameter(names = ['-s', '--settings'], descriptionKey = 'parameterSettings')
     String settings
@@ -68,17 +80,54 @@ class App {
     Boolean parse(String... args) {
         try {
             jc.parse(args)
+            configure()
             return true
         } catch (MissingCommandException mce) {
-            handleError new Node(null, 'error', [message: bundle.getString('error.missingCommand', args)], mce.message)
+            handleError new Node(null, 'error', [message: bundle.getString('error.missingCommand', args)], mce)
             return false
         } catch (ParameterException pe) {
-            handleError new Node(null, 'error', [message: bundle.getString('error.parameterException', args)], pe.message)
+            handleError new Node(null, 'error', [message: bundle.getString('error.parameterException', args)], pe)
             return false
         }
     }
 
     String getCommand() { jc.parsedCommand }
+
+    void configure() {
+        configureLogging()
+    }
+
+    void configureLogging() {
+        //Setup logging
+        Logger rootLogger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
+        LoggerContext loggerContext = LoggerFactory.getILoggerFactory()
+
+        rootLogger.level = logging.level
+
+        PatternLayoutEncoder encoder = new PatternLayoutEncoder()
+        encoder.context = loggerContext
+        encoder.pattern = '%-12date{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %c %-5level - %msg%n'
+        encoder.start()
+
+        FileAppender appender = new FileAppender()
+        appender.context = loggerContext
+        appender.name = "${programName}Log"
+        appender.file = defaults.applicationDirectory.resolve("${programName}.log")
+        appender.append = true
+        appender.encoder = encoder
+
+        TimeBasedRollingPolicy logPolicy = new TimeBasedRollingPolicy()
+        logPolicy.context = loggerContext
+        logPolicy.parent = appender
+        logPolicy.fileNamePattern = 'logs/logfile-%d{yyyy-MM-dd_HH}.log'
+        logPolicy.maxHistory = 7
+        logPolicy.start()
+
+        rootLogger.detachAndStopAllAppenders()
+
+        appender.start()
+        rootLogger.addAppender(appender)
+    }
 
     Node handleRequest() {
         Node response = new Node(null, 'response')
@@ -128,7 +177,11 @@ class App {
         }
 
         log.error "${error.@message}. ${details}"
-        System.err.println error.@message
+        if (error.value()?.class in Exception) {
+            System.err.println error.@message
+        } else {
+            throw error.value()
+        }
         System.exit(-1)
     }
 

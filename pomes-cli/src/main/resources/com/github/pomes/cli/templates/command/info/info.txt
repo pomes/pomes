@@ -44,6 +44,9 @@
     Mailing lists:<% model.mailingLists[0]?.each { %>
         - ${it.@name} (${it.@archive}) <% } %>
 
+    Classifiers and extensions:<% model.classifiersAndExtensions[0]?.each { %>
+        - ${it.@name}<% } %>
+
     Direct dependencies:<% model.dependencies[0].each { %>
      - ${it.@scope.padRight(12)} ${it.@name} ${it.@optional? '(optional)': ''} ${it.exclusions[0]?.exclusion? 'excludes:' << it.exclusions[0].exclusion.@name:''}<% } %>
     <%
