@@ -1,23 +1,13 @@
 package com.github.pomes.cli
 
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Logger
-import ch.qos.logback.classic.LoggerContext
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder
-import ch.qos.logback.core.FileAppender
-import ch.qos.logback.core.rolling.TimeBasedRollingPolicy
 import com.beust.jcommander.*
-import com.github.pomes.cli.utility.LogLevel
-import com.github.pomes.cli.utility.MessageBundle
-import com.github.pomes.cli.utility.OutputFormat
-import com.github.pomes.cli.utility.TemplateUtilities
+import com.github.pomes.cli.utility.*
 import com.github.pomes.core.Resolver
 import com.github.pomes.core.Searcher
 import com.github.pomes.core.repositories.JCenter
 import groovy.text.GStringTemplateEngine
 import groovy.util.logging.Slf4j
 import groovy.xml.XmlUtil
-import org.slf4j.LoggerFactory
 
 import java.nio.file.Files
 import java.util.ResourceBundle
@@ -38,8 +28,6 @@ import java.util.ResourceBundle
  *    limitations under the License.
  */
 
-
-
 @Slf4j
 @Parameters(resourceBundle = 'com.github.pomes.cli.MessageBundle')
 class App {
@@ -49,6 +37,10 @@ class App {
     final String programName = bundle.getString('programName')
 
     Context context
+
+    Configuration configuration
+
+    final JCommander jc
 
     @Parameter(names = ['-h', '--help'], help = true)
     Boolean help
@@ -65,10 +57,6 @@ class App {
     @Parameter(names = ['-f', '--format'], descriptionKey = 'parameterFormat')
     OutputFormat format = OutputFormat.text
 
-    final Defaults defaults = new Defaults()
-
-    final JCommander jc
-
     App() {
         jc = new JCommander(this)
         jc.programName = programName
@@ -77,10 +65,17 @@ class App {
         }
     }
 
+    String getCommand() { jc.parsedCommand }
+
+    void configure(String... args) {
+        parse args
+        configuration = new Configuration(settings: settings, logging: logging)
+        configuration.configure()
+    }
+
     Boolean parse(String... args) {
         try {
             jc.parse(args)
-            configure()
             return true
         } catch (MissingCommandException mce) {
             handleError new Node(null, 'error', [message: bundle.getString('error.missingCommand', args)], mce)
@@ -89,44 +84,6 @@ class App {
             handleError new Node(null, 'error', [message: bundle.getString('error.parameterException', args)], pe)
             return false
         }
-    }
-
-    String getCommand() { jc.parsedCommand }
-
-    void configure() {
-        configureLogging()
-    }
-
-    void configureLogging() {
-        //Setup logging
-        Logger rootLogger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
-        LoggerContext loggerContext = LoggerFactory.getILoggerFactory()
-
-        rootLogger.level = logging.level
-
-        PatternLayoutEncoder encoder = new PatternLayoutEncoder()
-        encoder.context = loggerContext
-        encoder.pattern = '%-12date{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %c %-5level - %msg%n'
-        encoder.start()
-
-        FileAppender appender = new FileAppender()
-        appender.context = loggerContext
-        appender.name = "${programName}Log"
-        appender.file = defaults.applicationDirectory.resolve("${programName}.log")
-        appender.append = true
-        appender.encoder = encoder
-
-        TimeBasedRollingPolicy logPolicy = new TimeBasedRollingPolicy()
-        logPolicy.context = loggerContext
-        logPolicy.parent = appender
-        logPolicy.fileNamePattern = 'logs/logfile-%d{yyyy-MM-dd_HH}.log'
-        logPolicy.maxHistory = 7
-        logPolicy.start()
-
-        rootLogger.detachAndStopAllAppenders()
-
-        appender.start()
-        rootLogger.addAppender(appender)
     }
 
     Node handleRequest() {
@@ -148,12 +105,7 @@ class App {
         context = new Context(
                 jCommander: jc,
                 searcher: new Searcher(new JCenter()),
-                resolver: new Resolver(defaults.remoteRepositories, defaults.localRepository))
-
-        if (!Files.exists(context.resolver.localRepository.basedir.toPath())) {
-            log.info bundle.getString('log.creatingLocalRepository', context.resolver.localRepository.basedir)
-            Files.createDirectories(context.resolver.localRepository.basedir.toPath())
-        }
+                resolver: new Resolver(configuration.remoteRepositories, configuration.localRepository))
 
         CliCommands command = CliCommands.lookupCliCommand(this.command)
 
@@ -177,10 +129,11 @@ class App {
         }
 
         log.error "${error.@message}. ${details}"
+        println error.value().class
         if (error.value()?.class in Exception) {
-            System.err.println error.@message
-        } else {
             throw error.value()
+        } else {
+            System.err.println error.@message
         }
         System.exit(-1)
     }
@@ -233,7 +186,7 @@ class App {
     static void main(String[] args) {
         App cli = new App()
         try {
-            cli.parse(args)
+            cli.configure(args)
             cli.displayResponse cli.handleRequest()
         } catch (any) {
             cli.handleError new Node(null, 'error', [message: cli.bundle.getString('error.unhandledException', any.message)], any)
