@@ -23,12 +23,17 @@ class NodeTransformer {
     static Map nodeToMap(Node node) {
         def handle
         handle = { n ->
-            (n in String) ? n : [(n.name()): n.attributes() + [ values: n.collect(handle)]]
+            if (n in String)
+                return n
+            Map retMap = n.attributes()?:[:]
+            List values = n.collect(handle)
+            if (values) {
+                retMap << [values: values]
+            }
+            [(n.name()): retMap]
         }
 
         // Convert it to a Map containing a List of Maps
-        [(node.name()):
-                                  node.collect { nodeChild -> [(nodeChild.name()): nodeChild.collect(handle)] }
-        ]
+        [(node.name()): node.collect { nodeChild -> [(nodeChild.name()): nodeChild.collect(handle)] }]
     }
 }
