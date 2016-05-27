@@ -1,16 +1,19 @@
 description = 'Core library for Pomes'
 
 dependencies {
-    compile 'org.eclipse.aether:aether-api:1.1.0'
-    compile 'org.eclipse.aether:aether-util:1.1.0'
-    compile 'org.eclipse.aether:aether-impl:1.1.0'
-    compile 'org.eclipse.aether:aether-connector-basic:1.1.0'
-    compile 'org.eclipse.aether:aether-transport-file:1.1.0'
-    compile 'org.eclipse.aether:aether-transport-http:1.1.0'
-    compile 'org.eclipse.aether:aether-transport-wagon:1.1.0'
+    def aetherVersion = '1.1.0'
+    def mavenVersion = '3.3.3'
+
+    compile "org.eclipse.aether:aether-api:$aetherVersion"
+    compile "org.eclipse.aether:aether-util:$aetherVersion"
+    compile "org.eclipse.aether:aether-impl:$aetherVersion"
+    compile "org.eclipse.aether:aether-connector-basic:$aetherVersion"
+    compile "org.eclipse.aether:aether-transport-file:$aetherVersion"
+    compile "org.eclipse.aether:aether-transport-http:$aetherVersion"
+    compile "org.eclipse.aether:aether-transport-wagon:$aetherVersion"
     compile 'org.apache.maven.wagon:wagon-ssh:1.0'
-    compile 'org.apache.maven:maven-aether-provider:3.3.3'
-    compile 'org.apache.maven:maven:3.3.3'
+    compile "org.apache.maven:maven-aether-provider:$mavenVersion"
+    compile "org.apache.maven:maven:$mavenVersion"
     compile 'org.apache.maven:maven-project:2.2.1'
 
     compile 'org.glassfish.jersey.core:jersey-client:2.22.1'
