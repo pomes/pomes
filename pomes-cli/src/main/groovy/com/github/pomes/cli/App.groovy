@@ -146,6 +146,12 @@ class App {
         String templateName = command ?: 'base'
 
         switch (format) {
+            case OutputFormat.json:
+                print NodeTransformer.nodeToJson(response)
+                break
+            case OutputFormat.yaml:
+                print NodeTransformer.nodeToYaml(response)
+                break
             case OutputFormat.xml:
                 print XmlUtil.serialize(response)
                 break

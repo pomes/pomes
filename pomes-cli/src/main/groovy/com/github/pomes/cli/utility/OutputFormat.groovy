@@ -20,10 +20,9 @@ enum OutputFormat {
     text('text', 'txt'),
     xml('xml', 'xml'),
     html('html', 'html'),
+    json('json', 'json'),
+    yaml('yaml', 'yaml'),
     raw('raw', 'node')
-
-    //YAML('yaml', 'yaml'),
-    //JSON('json', 'json'),
 
     String value, extension
 
