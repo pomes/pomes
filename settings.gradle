@@ -1,3 +1,2 @@
 rootProject.name = 'pomes'
-include 'pomes-parent', 'pomes-core', 'pomes-cli', 'pomes-util'
-
+include 'core', 'util', 'cli'

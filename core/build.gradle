@@ -20,7 +20,7 @@ dependencies {
     compile 'org.jsoup:jsoup:1.9.1'
     compile 'ch.qos.logback:logback-classic:1.1.3'
 
-    compile 'org.owasp:dependency-check-core:1.3.6'
+    //compile 'org.owasp:dependency-check-core:1.3.6'
 
     testCompile 'co.freeside:betamax:1.1.2'
 }

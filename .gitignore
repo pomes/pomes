@@ -153,3 +153,17 @@ nb-configuration.xml
 !gradle/wrapper/gradle-wrapper.jar
 
 *.secret
+secrets.properties
+bintray-descriptor.bintray-info.json
+pomes-cli/bintray-descriptor.bintray-info.json
+pomes-cli/src/main/java/
+pomes-cli/src/test/
+pomes-core/bintray-descriptor.bintray-info.json
+pomes-core/src/main/java/
+pomes-core/src/main/resources/
+pomes-core/src/test/java/
+pomes-core/src/test/resources/
+pomes-util/bintray-descriptor.bintray-info.json
+pomes-util/src/main/java/
+pomes-util/src/main/resources/
+pomes-util/src/test/

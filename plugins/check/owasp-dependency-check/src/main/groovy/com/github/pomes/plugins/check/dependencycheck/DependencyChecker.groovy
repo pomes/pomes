@@ -16,8 +16,8 @@
 
 package com.github.pomes.core
 
-import groovy.util.logging.Slf4j
-import org.apache.maven.artifact.Artifact
+import Slf4j
+import Artifact
 import org.owasp.dependencycheck.Engine
 import org.owasp.dependencycheck.data.nvdcve.CveDB
 import org.owasp.dependencycheck.data.nvdcve.DatabaseException
@@ -42,7 +42,7 @@ class DependencyChecker {
         DatabaseProperties databaseProperties
 
         try {
-            log.info "Scanning artifacts: ${artifacts*.file}"
+            com.github.pomes.core.DependencyChecker.log.info "Scanning artifacts: ${artifacts*.file}"
             engine = new Engine()
             engine.scan(artifacts*.file)
             engine.analyzeDependencies()
@@ -55,13 +55,13 @@ class DependencyChecker {
 
 
             } catch (DatabaseException ex) {
-                log.debug "Unable to retrieve DB Properties", ex
+                com.github.pomes.core.DependencyChecker.log.debug "Unable to retrieve DB Properties", ex
             } finally {
                 cve?.close()
             }
         } catch (DatabaseException ex) {
-            log.error 'Unable to connect to the dependency-check database; analysis has stopped'
-            log.debug("", ex);
+            com.github.pomes.core.DependencyChecker.log.error 'Unable to connect to the dependency-check database; analysis has stopped'
+            com.github.pomes.core.DependencyChecker.log.debug("", ex);
         } finally {
             engine?.cleanup()
         }

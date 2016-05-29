@@ -25,10 +25,25 @@ class NodeTransformer {
         handle = { n ->
             if (n in String)
                 return n
+
             Map retMap = n.attributes()?:[:]
             List values = n.collect(handle)
             if (values) {
-                retMap << [values: values]
+                List lst = values.split{it in String}
+                if (lst[0]) {
+                    retMap << [values: lst[0]]
+                }
+
+                lst[1].each {
+                    it.keySet().each { key ->
+                        if (retMap.containsKey(key)) {
+                            retMap.get(key) << it.get(key)
+                        } else {
+                            retMap.put(key, [it.get(key)])
+                        }
+                    }
+                }
+
             }
             [(n.name()): retMap]
         }

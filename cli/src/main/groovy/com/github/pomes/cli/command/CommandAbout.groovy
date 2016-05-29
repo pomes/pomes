@@ -25,7 +25,7 @@ class CommandAbout implements Command {
             thirdPartyLibraries {
                 maven(name: 'Apache Maven', url: 'http://maven.apache.org/', licence: 'Apache License - v 2.0')
                 aether(name: 'Eclipse Aether', url: 'https://www.eclipse.org/aether/', licence: 'Eclipse Public License - v 1.0')
-                dependencyCheck(name: 'OWASP Dependency Check', url: 'https://www.owasp.org/index.php/OWASP_Dependency_Check', licence: 'Apache License - v 2.0')
+                //dependencyCheck(name: 'OWASP Dependency Check', url: 'https://www.owasp.org/index.php/OWASP_Dependency_Check', licence: 'Apache License - v 2.0')
             }
             thirdPartyServices {
                 jcenter(name: JCenter.displayName, url: JCenter.url)
