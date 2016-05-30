@@ -1,4 +1,5 @@
 import groovy.json.JsonOutput
+
 import java.time.LocalDateTime
 
 buildscript {
@@ -6,7 +7,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.1.1"
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.3.0"
     }
 }
 
@@ -22,64 +23,71 @@ allprojects {
         jcenter()
     }
 
-    group = 'com.github.pomes'
-    version = '0.1.0-SNAPSHOT'
-    status = 'SNAPSHOT'
+    apply plugin: 'maven-publish'
+    apply plugin: 'com.jfrog.artifactory'
 
     ext {
         groovyVersion = '2.4.6'
         spockVersion = '1.0-groovy-2.4'
-        gradleVersion = '2.12'
         codeNarcVersion = '0.25.1'
-
-        basePom = new NodeBuilder().pom {
-            name project.name
-            description project.description
-            url 'https://github.com/pomes/pomes'
-            inceptionYear '2016'
-            scm {
-                url 'https://github.com/pomes/pomes.git'
-                connection 'scm:git:https://github.com/pomes/pomes.git'
-                developerConnection 'scm:git:https://github.com/pomes/pomes.git'
-            }
-            licenses {
-                license {
-                    name 'The Apache Software License, Version 2.0'
-                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    distribution 'repo'
-                }
-            }
-            issueManagement {
-                system 'GitHub'
-                url 'https://github.com/pomes/pomes/issues'
-            }
-
-            ciManagement {
-                system 'TravisCI'
-                url 'https://travis-ci.org/pomes/pomes'
-            }
-            developers {
-                developer {
-                    id 'dedickinson'
-                    name 'Duncan Dickinson'
-                    email 'duncan@dickinson.name'
-                    url 'http://www.duncan.dickinson.name'
-                }
-            }
-        }
+        gradleVersion = '2.13'
     }
+
     wrapper.gradleVersion = gradleVersion
+
 }
 
-configure(subprojects.findAll { it.name in ['core', 'cli', 'util'] }) {
+configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-util'] }) {
     apply plugin: 'groovy'
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'
     apply plugin: 'jacoco'
-    apply plugin: 'maven-publish'
-    apply plugin: 'com.jfrog.artifactory'
+
 
     sourceCompatibility = 1.8
+
+    group = 'com.github.pomes'
+    version = '0.1.0-SNAPSHOT'
+    status = 'SNAPSHOT'
+
+
+
+    project.ext.basePom = new NodeBuilder().pom {
+        name project.name
+        description project.description
+        url 'https://github.com/pomes/pomes'
+        inceptionYear '2016'
+        scm {
+            url 'https://github.com/pomes/pomes.git'
+            connection 'scm:git:https://github.com/pomes/pomes.git'
+            developerConnection 'scm:git:https://github.com/pomes/pomes.git'
+        }
+        licenses {
+            license {
+                name 'The Apache Software License, Version 2.0'
+                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                distribution 'repo'
+            }
+        }
+        issueManagement {
+            system 'GitHub'
+            url 'https://github.com/pomes/pomes/issues'
+        }
+
+        ciManagement {
+            system 'TravisCI'
+            url 'https://travis-ci.org/pomes/pomes'
+        }
+        developers {
+            developer {
+                id 'dedickinson'
+                name 'Duncan Dickinson'
+                email 'duncan@dickinson.name'
+                url 'http://www.duncan.dickinson.name'
+            }
+        }
+    }
+
 
     dependencies {
         compile "org.codehaus.groovy:groovy-all:$groovyVersion"
@@ -103,14 +111,14 @@ configure(subprojects.findAll { it.name in ['core', 'cli', 'util'] }) {
     task createBintrayInfoFile() {
         File outputFile = new File("$projectDir/$bintrayInfoFileName")
         outputs.file outputFile
-        def pom = rootProject.ext.basePom
+        def pom = project.ext.basePom
         //See: https://bintray.com/docs/api/#_create_package
         Map info = [
                 package: [
                         name                   : project.name,
                         repo                   : 'pomes/pomes',
                         //subject                : "eyalbr",
-                        desc                   : project.description,
+                        desc                   : description,
                         website_url            : pom.url[0].value(),
                         issue_tracker_url      : pom.issueManagement[0].url[0].value(),
                         vcs_url                : 'https://github.com/pomes/pomes.git',
@@ -137,12 +145,12 @@ configure(subprojects.findAll { it.name in ['core', 'cli', 'util'] }) {
                 artifact sourcesJar
                 artifact groovydocJar
 
-                artifact("$rootDir/$bintrayInfoFileName") {
+                artifact("$projectDir/$bintrayInfoFileName") {
                     extension "bintray-info.json"
                 }
 
                 pom.withXml {
-                    rootProject.ext.basePom.each { n ->
+                    project.ext.basePom.each { n ->
                         asNode().append n
                     }
                 }
@@ -153,31 +161,22 @@ configure(subprojects.findAll { it.name in ['core', 'cli', 'util'] }) {
     artifactory {
         //See: https://www.jfrog.com/confluence/display/RTF/Gradle+Artifactory+Plugin
         //See: https://artifactory.jfrog.org/confluence/display/RTF/Deploying+Snapshots+to+oss.jfrog.org#DeployingSnapshotstooss.jfrog.org-WorkingwithOJO
-
-        contextUrl = 'https://oss.jfrog.org'
+        contextUrl = "${artifactory_contextUrl}"
         publish {
             repository {
                 repoKey = 'oss-snapshot-local' // The Artifactory repository key to publish to
                 username = "${getSecret('artifactoryUser')}" // The publisher user name
                 password = "${getSecret('artifactoryPassword')}" // The publisher password
+                //maven = true
             }
             defaults {
-                // Reference to Gradle publications defined in the build script.
-                // This is how we tell the Artifactory Plugin which artifacts should be
-                // published to Artifactory.
-
-                publications('mavenJava')
-                publishArtifacts = true
-                // Properties to be attached to the published artifacts.
-                properties = [:]
-                // Publish generated POM files to Artifactory (true by default)
-                publishPom = true
+                publications ('mavenJava')
             }
         }
     }
 }
 
-String getSecret(String key){
+String getSecret(String key) {
     def props = new Properties()
     new File('secrets.properties').withInputStream {
         stream -> props.load(stream)
