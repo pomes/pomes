@@ -1,4 +1,3 @@
-openssl aes-256-cbc -K $encrypted_bb9481c64672_key -iv $encrypted_bb9481c64672_iv -in secrets.properties.enc -out secrets.properties -d
 language: groovy
 
 jdk:
@@ -6,3 +5,4 @@ jdk:
 
 before_install:
   - chmod +x gradlew
+  - openssl aes-256-cbc -K $encrypted_bb9481c64672_key -iv $encrypted_bb9481c64672_iv -in secrets.properties.enc -out secrets.properties -d
