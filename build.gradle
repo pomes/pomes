@@ -31,6 +31,7 @@ allprojects {
         spockVersion = '1.0-groovy-2.4'
         codeNarcVersion = '0.25.1'
         gradleVersion = '2.13'
+        secrets = getSecrets()
     }
 
     wrapper.gradleVersion = gradleVersion
@@ -161,13 +162,13 @@ configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-ut
     artifactory {
         //See: https://www.jfrog.com/confluence/display/RTF/Gradle+Artifactory+Plugin
         //See: https://artifactory.jfrog.org/confluence/display/RTF/Deploying+Snapshots+to+oss.jfrog.org#DeployingSnapshotstooss.jfrog.org-WorkingwithOJO
-        contextUrl = "${artifactory_contextUrl}"
+        contextUrl = 'https://oss.jfrog.org/artifactory/'
         publish {
             repository {
                 repoKey = 'oss-snapshot-local' // The Artifactory repository key to publish to
-                username = "${getSecret('artifactoryUser')}" // The publisher user name
-                password = "${getSecret('artifactoryPassword')}" // The publisher password
-                //maven = true
+                username = ext.secrets.artifactoryUser // The publisher user name
+                password = ext.secrets.artifactoryPassword // The publisher password
+                maven = true
             }
             defaults {
                 publications ('mavenJava')
@@ -176,10 +177,11 @@ configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-ut
     }
 }
 
-String getSecret(String key) {
+Properties getSecrets() {
     def props = new Properties()
-    new File('secrets.properties').withInputStream {
-        stream -> props.load(stream)
+
+    file("${rootDir.absolutePath}/secrets.properties").withInputStream { stream ->
+        props.load(stream)
     }
-    props.getProperty(key)
+    return props
 }
