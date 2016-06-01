@@ -18,6 +18,10 @@ plugins {
 
 description = 'Base project for Pomes'
 
+task publishAll(dependsOn: ['pomes-core:artifactoryPublish',
+                            'pomes-util:artifactoryPublish',
+                            'pomes-cli:artifactoryPublish']) {}
+
 allprojects {
     repositories {
         jcenter()
@@ -171,7 +175,7 @@ configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-ut
                 maven = true
             }
             defaults {
-                publications ('mavenJava')
+                publications('mavenJava')
             }
         }
     }
