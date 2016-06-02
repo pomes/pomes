@@ -1,0 +1,13 @@
+<% response.query.coordinates[0].children().each { coord ->
+    out << "${coord.@name}\n"
+    if (coord.error[0]) {
+            out << "  Error: ${coord.error[0].@message}\n"
+    } else {
+        coord.results[0].with { res -> %>
+    Count: ${res.@count}
+
+    Results: <% res.each { if (it.name() == 'version' ) {%>
+      - ${it.@name}${(it.@latest)?' (latest)':''} <% } else { %>
+      - ${it.@name} (extension: ${it.@extension}, classifier: ${it.@classifier})<% }}
+    }
+}}%>

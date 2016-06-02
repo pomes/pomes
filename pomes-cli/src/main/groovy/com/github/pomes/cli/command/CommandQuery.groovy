@@ -40,8 +40,10 @@ class CommandQuery implements Command {
     @Override
     Node handleRequest(Context context) {
         Node response = new Node(null, 'query')
+        Node coordinatesNode = new Node(response, 'coordinates')
         Resolver resolver = context.resolver
         coordinates.each { coordinate ->
+            Node coordinateNode = new Node(coordinatesNode, 'coordinate', [name: coordinate])
             log.info bundle.getString('log.commandRequest', 'query', coordinate, latest)
 
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
@@ -52,19 +54,21 @@ class CommandQuery implements Command {
 
             if (ac.version) {
                 List<Artifact> artifacts = resolver.getClassifiersAndExtensions(ac)
-                response.append new NodeBuilder()."$coordinate"(count: artifacts.size()) {
-                    artifacts.each { artifact ->
-                        artifact classifier: artifact.classifier,
-                                extension: artifact.extension
+                coordinateNode.append new NodeBuilder().results(count: artifacts.size()) {
+                    artifacts.each { a ->
+                        artifact name: "$a",
+                                classifier: a.classifier,
+                                extension: a.extension
                     }
                 }
             } else {
                 ac = ac.copyWith(version: ArtifactCoordinate.VERSION_OPEN)
                 List<Version> versions = resolver.getArtifactVersions(ac)
-                response.append new NodeBuilder()."$coordinate"(count: versions.size(),
-                        latest: resolver.getArtifactLatestVersion(ac)) {
-                    versions.each { version ->
-                        "$version"
+                String latestVersion = resolver.getArtifactLatestVersion(ac)
+                coordinateNode.append new NodeBuilder().results(count: versions.size(),
+                        latest: latestVersion) {
+                    versions.each { v ->
+                        version(name: v, latest: ("$v" == latestVersion))
                     }
                 }
             }

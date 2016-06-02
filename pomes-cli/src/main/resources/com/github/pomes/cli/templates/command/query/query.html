@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head><title>Info results</title></head>
+<body>
+<h1>Query results</h1>
+
+<p>Requested coordinates:</p>
+<ul>
+    <% response.query.coordinates[0].children().each { coord -> %>
+    <li><a href="#${coord.@name}">${coord.@name}</a></li>
+    <% } %>
+</ul>
+<% response.query.coordinates[0].children().each { coord -> %>
+    <h2>${coord.@name}</h2>
+    <a name="${coord.@name}"></a>
+    <% if (coord.error[0]) {
+    %> <p>Error: ${coord.error[0].@message}</p> <%
+    } else {
+        coord.results[0].with { res -> %>
+    <p>Count: ${res.@count}</p>
+
+    <p>Results:</p>
+    <ul> <% res.each { if (it.name() == 'version' ) {%>
+      <li> ${it.@name}${(it.@latest)?' (latest)':''} </li><% } else { %>
+      <li>${it.@name} (extension: ${it.@extension}, classifier: ${it.@classifier})</li><% }} %>
+    </ul>
+    <%}
+}}%>
+</body>
+</html>
+
