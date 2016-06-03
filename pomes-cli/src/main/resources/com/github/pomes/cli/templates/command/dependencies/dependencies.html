@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head><title>Dependencies results</title></head>
+<body>
+<h1>Dependencies results</h1>
+
+<p>Requested coordinates:</p>
+<ul>
+    <% response.dependencies.coordinates[0].each { coord -> %>
+    <li><a href="#${coord.@name}">${coord.@name}</a></li>
+    <% } %>
+</ul>
+
+<% response.dependencies.coordinates[0].each { coord ->
+%><h2>${coord.@name}</h2>
+<a name="${coord.@name}"></a>
+<% if (coord.error[0]) {
+%> <p>Error: ${coord.error[0].@message}</p> <%
+} else {
+%>
+<table>
+    <tr>
+        <th>Scope</th>
+        <th>Artifact</th>
+        <th>Optional</th>
+        <th>Exclusions</th>
+    </tr>
+    <% coord.dependencies[0].each { %>
+    <tr>
+        <td>${it.@scope}</td>
+        <td>${it.@name}</td>
+        <td>${it.@optional? 'Y': ''}</td>
+        <td>${it.exclusions[0]?.exclusion? it.exclusions[0].exclusion.@name:''}</td>
+    </tr>
+    <% } %>
+</table>
+<%
+
+}
+} %>
+</body>
+</html>

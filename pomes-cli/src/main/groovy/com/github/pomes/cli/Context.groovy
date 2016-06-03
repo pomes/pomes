@@ -21,7 +21,7 @@ import com.github.pomes.core.Resolver
 import com.github.pomes.core.Searcher
 
 class Context {
-    JCommander jCommander
+    App app
     Searcher searcher
     Resolver resolver
 }

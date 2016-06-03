@@ -79,9 +79,6 @@ class CommandInfo implements Command {
                         artifactId: dep.artifact.artifactId,
                         version: dep.artifact.version,
                         extension: ArtifactExtension.POM)
-                //TODO: Get this working once I've solved the parent POM issues
-                //Artifact depArtifact = resolver.getArtifact(dac).artifact
-                //resolver.getEffectiveModel(depArtifact)
             }
             coordinateNode.append buildInfoNode(effectiveModel, artifactListing, dependencyListing)
         }

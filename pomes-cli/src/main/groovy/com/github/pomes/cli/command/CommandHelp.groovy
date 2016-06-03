@@ -32,13 +32,12 @@ class CommandHelp implements Command {
         if (helpSubCommands) {
             helpSubCommands.each {
                 StringBuilder out = new StringBuilder()
-                context.jCommander.usage(it, out)
+                context.app.jc.usage(it, out)
                 new Node(response, it, out.toString())
             }
         } else {
-            context.jCommander.commands.each { cmdObj ->
-                //cmdObj.key(context.jCommander.getCommandDescription(cmdObj.key))
-                new Node(response, cmdObj.key, context.jCommander.getCommandDescription(cmdObj.key))
+            context.app.jc.commands.each { cmdObj ->
+                new Node(response, cmdObj.key, context.app.jc.getCommandDescription(cmdObj.key))
             }
         }
         return response

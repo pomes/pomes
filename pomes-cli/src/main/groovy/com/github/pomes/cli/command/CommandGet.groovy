@@ -32,7 +32,6 @@ import org.eclipse.aether.resolution.ArtifactResult
 @Slf4j
 @Parameters(commandNames = ['get'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionGet')
 class CommandGet implements Command {
-    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
 
     @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
@@ -48,6 +47,7 @@ class CommandGet implements Command {
 
     @Override
     Node handleRequest(Context context) {
+        MessageBundle bundle = context.app.bundle
         Node response = new Node(null, 'get')
         Node coordinatesNode = new Node(response, 'coordinates')
         coordinates.each { coordinate ->

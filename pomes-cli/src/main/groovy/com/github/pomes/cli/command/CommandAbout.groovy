@@ -12,14 +12,14 @@ import groovy.util.logging.Slf4j
 @Slf4j
 @Parameters(commandNames = ['about'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionAbout')
 class CommandAbout implements Command {
-    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
 
     @Override
     Node handleRequest(Context context) {
+        MessageBundle bundle = context.app.bundle
         new NodeBuilder().about {
             program {
-                name bundle.getString('programName')
-                version bundle.getString('programVersion')
+                name context.app.programName
+                version context.app.programVersion
                 licence bundle.getString('programLicence')
             }
             thirdPartyLibraries {

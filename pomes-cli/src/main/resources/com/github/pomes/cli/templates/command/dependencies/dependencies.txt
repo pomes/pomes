@@ -1,0 +1,10 @@
+<% response.dependencies.coordinates[0].each { coord ->
+    out << "${coord.@name}\n"
+    if (coord.error[0]) {
+        out << "  Error: ${coord.error[0].@message}\n"
+    } else {
+        coord.dependencies[0].each { %>
+    - ${it.@scope.padRight(12)} ${it.@name} ${it.@optional? '(optional)': ''} ${it.exclusions[0]?.exclusion? 'excludes:' << it.exclusions[0].exclusion.@name:''}<% } %>
+    <%}
+}
+%>

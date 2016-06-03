@@ -30,7 +30,6 @@ import org.eclipse.aether.graph.Dependency
 @Slf4j
 @Parameters(commandNames = ['check'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = "commandDescriptionCheck")
 class CommandCheck implements Command {
-    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
 
     @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
@@ -46,6 +45,7 @@ class CommandCheck implements Command {
 
     @Override
     Node handleRequest(Context context) {
+        MessageBundle bundle = context.app.bundle
         Resolver resolver = context.resolver
         Node response = new Node(null, 'check')
         Node coordinatesNode = new Node(response, 'coordinates')
@@ -77,67 +77,6 @@ class CommandCheck implements Command {
                             optional     : dependency.optional])
                 }
             }
-
-            //Model model = resolver.getEffectiveModel(artifact)
-
-            /*
-            //TODO: Mainly need this if given a POM - not needed(?) if coordinate includes jar
-            ArtifactCoordinate packageAC = new ArtifactCoordinate(groupId: model.groupId,
-                    artifactId: model.artifactId,
-                    version: model.version,
-                    extension: model.packaging)
-            Artifact packageArtifact = resolver.getArtifact(packageAC).artifact
-            */
-            /*
-            TODO: Re-enable once node work is complete
-            //Map<Dependency> outdatedDependencyMap = [:]
-            //CollectResult collectResult
-            //DependencyVisitor visitor
-            if (transitive) {
-                collectResult = resolver.collectAllDependencies(ac.artifact, scope)
-                log.debug bundle.getString('log.dependencyRoot', 'info', collectResult.root.artifact)
-                //visitor = new CommandLineDumperTransitiveDependencyCheck(resolver)
-                new Node(response,'collectResult', collectResult)
-            } else {
-            */
-
-            /*
-            response.append new NodeBuilder().outdatedDependencies {
-                resolver.getDirectDependencies(artifact)?.
-                        findAll { scope && (it.scope != scope) }?.
-                        each { Dependency dependency ->
-                            String latest = resolver.getArtifactLatestVersion(dependency.artifact)
-                            if (latest != dependency.artifact.version) {
-                                "$dependency.artifact"(
-                                        latestVersion: latest,
-                                        scope: dependency.scope,
-                                        dependency: dependency)
-                            }
-                        }
-            }
-            */
-            /*
-            TODO: Remove
-            URL template = this.class.getResource('/com/github/pomes/cli/templates/model/check.txt')
-
-            if (template) {
-                GStringTemplateEngine engine = new GStringTemplateEngine()
-
-                println engine.createTemplate(template)
-                        .make([artifact                      : artifact,
-                               packageArtifact               : packageArtifact,
-                               model                         : model,
-                               transitive                    : transitive,
-                               latestVersion                 : latestVersion,
-                               outdatedDependencies          : outdatedDependencyMap,
-                               outdatedTransitiveDependencies: collectResult,
-                               visitor                       : visitor])
-                        .toString()
-            } else {
-                System.err.println "Failed to load the requested template"
-                System.exit(-1)
-            }
-            */
         }
         return response
     }

@@ -103,7 +103,7 @@ class App {
         }
 
         context = new Context(
-                jCommander: jc,
+                app: this,
                 searcher: new Searcher(new JCenter()),
                 resolver: new Resolver(configuration.remoteRepositories, configuration.localRepository))
 

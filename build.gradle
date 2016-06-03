@@ -7,7 +7,9 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.3.0"
+        //classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.3.0"
+        classpath 'com.netflix.nebula:nebula-release-plugin:4.0.1'
+        classpath 'com.netflix.nebula:nebula-bintray-plugin:3.3.4'
     }
 }
 
@@ -28,7 +30,8 @@ allprojects {
     }
 
     apply plugin: 'maven-publish'
-    apply plugin: 'com.jfrog.artifactory'
+    //apply plugin: 'com.jfrog.artifactory'
+    apply plugin: 'nebula.nebula-release'
 
     ext {
         groovyVersion = '2.4.6'
@@ -47,15 +50,13 @@ configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-ut
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'
     apply plugin: 'jacoco'
-
+    apply plugin: 'nebula.nebula-bintray'
 
     sourceCompatibility = 1.8
 
     group = 'com.github.pomes'
     version = '0.1.0-SNAPSHOT'
     status = 'SNAPSHOT'
-
-
 
     project.ext.basePom = new NodeBuilder().pom {
         name project.name
@@ -92,7 +93,6 @@ configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-ut
             }
         }
     }
-
 
     dependencies {
         compile "org.codehaus.groovy:groovy-all:$groovyVersion"
