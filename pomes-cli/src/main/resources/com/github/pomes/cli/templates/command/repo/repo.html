@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>Repo results</title></head>
+<body>
+<h1>Repositories</h1>
+
+<h2>Search</h2>
+<p>Primary: ${response.repo.searching[0].primary[0].@displayName}
+    (<a href="${response.repo.searching[0].primary[0].@url}">${response.repo.searching[0].primary[0].@url}</a>)</p>
+
+<h2>Maven Repositories</h2>
+
+<p>Local: <a href="file://${response.repo.mavenRepositories[0].local[0].value()}">${response.repo.mavenRepositories[0].local[0].value()}</a></p>
+
+<p>Remote:</p><ul> <% response.repo.mavenRepositories[0].remotes[0].each { %>
+    <li>${it.@id} (<a href="${it.@url}">${it.@url}</a>)</li>
+        <% }%>
+</ul>
+</body>
+</html>
+

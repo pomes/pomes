@@ -1,0 +1,7 @@
+Search:
+    Primary: ${response.repo.searching[0].primary[0].@displayName} (${response.repo.searching[0].primary[0].@url})
+
+Maven Repositories:
+    Local: ${response.repo.mavenRepositories[0].local[0].value()}
+    Remote: <% response.repo.mavenRepositories[0].remotes[0].each { %>
+        - ${it.@id} (${it.@url})<% }%>

@@ -27,9 +27,8 @@ class CommandRepo implements Command {
         new NodeBuilder().repo {
             searching {
                 primary displayName: context.searcher.primarySearchProvider.displayName,
-                        id: context.searcher.primarySearchProvider.id
-                url:
-                context.searcher.primarySearchProvider.apiUrl
+                        id: context.searcher.primarySearchProvider.id,
+                        url: context.searcher.primarySearchProvider.apiUrl
                 secondaries {
                     context.searcher.alternativeSearchProviders.each { provider ->
                         provider.id displayName: provider.displayName,
@@ -41,7 +40,7 @@ class CommandRepo implements Command {
                 local context.resolver.localRepository.basedir
                 remotes {
                     context.resolver.remoteRepositories.each { repo ->
-                        repo.id url: repo.url
+                        repository id: repo.id, url: repo.url
                     }
                 }
             }
