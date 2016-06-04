@@ -1,17 +1,19 @@
-import groovy.json.JsonOutput
-
-import java.time.LocalDateTime
-
 buildscript {
     repositories {
         jcenter()
     }
     dependencies {
-        //classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.3.0"
+        classpath 'com.netflix.nebula:gradle-info-plugin:3.+'
+        classpath 'com.netflix.nebula:gradle-contacts-plugin:1.9.+'
+        classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
         classpath 'com.netflix.nebula:nebula-release-plugin:4.0.1'
         classpath 'com.netflix.nebula:nebula-bintray-plugin:3.3.4'
+        classpath 'org.eclipse.jgit:org.eclipse.jgit:3.2.0.201312181205-r'
+        classpath 'org.ajoberstar:gradle-git:1.4.2'
     }
 }
+
+import static org.ajoberstar.gradle.git.release.opinion.Strategies.SNAPSHOT
 
 plugins {
     id 'idea'
@@ -20,29 +22,31 @@ plugins {
 
 description = 'Base project for Pomes'
 
-task publishAll(dependsOn: ['pomes-core:artifactoryPublish',
-                            'pomes-util:artifactoryPublish',
-                            'pomes-cli:artifactoryPublish']) {}
-
 allprojects {
     repositories {
         jcenter()
     }
 
-    apply plugin: 'maven-publish'
-    //apply plugin: 'com.jfrog.artifactory'
+    apply plugin: 'org.ajoberstar.grgit'
+    apply plugin: 'org.ajoberstar.release-base'
     apply plugin: 'nebula.nebula-release'
+
+    version = '0.1.0-SNAPSHOT'
+
+    release {
+        defaultVersionStrategy = SNAPSHOT
+    }
 
     ext {
         groovyVersion = '2.4.6'
         spockVersion = '1.0-groovy-2.4'
         codeNarcVersion = '0.25.1'
         gradleVersion = '2.13'
+        inceptionYear = '2016'
         secrets = getSecrets()
     }
 
     wrapper.gradleVersion = gradleVersion
-
 }
 
 configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-util'] }) {
@@ -50,49 +54,17 @@ configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-ut
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'
     apply plugin: 'jacoco'
+    apply plugin: 'nebula.info'
+    apply plugin: 'nebula.maven-publish'
+    apply plugin: 'nebula.source-jar'
     apply plugin: 'nebula.nebula-bintray'
+    apply plugin: 'nebula.maven-apache-license'
+    apply plugin: 'nebula.contacts'
+    apply plugin: 'nebula.nebula-ojo-publishing'
 
     sourceCompatibility = 1.8
 
     group = 'com.github.pomes'
-    version = '0.1.0-SNAPSHOT'
-    status = 'SNAPSHOT'
-
-    project.ext.basePom = new NodeBuilder().pom {
-        name project.name
-        description project.description
-        url 'https://github.com/pomes/pomes'
-        inceptionYear '2016'
-        scm {
-            url 'https://github.com/pomes/pomes.git'
-            connection 'scm:git:https://github.com/pomes/pomes.git'
-            developerConnection 'scm:git:https://github.com/pomes/pomes.git'
-        }
-        licenses {
-            license {
-                name 'The Apache Software License, Version 2.0'
-                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                distribution 'repo'
-            }
-        }
-        issueManagement {
-            system 'GitHub'
-            url 'https://github.com/pomes/pomes/issues'
-        }
-
-        ciManagement {
-            system 'TravisCI'
-            url 'https://travis-ci.org/pomes/pomes'
-        }
-        developers {
-            developer {
-                id 'dedickinson'
-                name 'Duncan Dickinson'
-                email 'duncan@dickinson.name'
-                url 'http://www.duncan.dickinson.name'
-            }
-        }
-    }
 
     dependencies {
         compile "org.codehaus.groovy:groovy-all:$groovyVersion"
@@ -101,59 +73,35 @@ configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-ut
 
     apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
 
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
+    contacts {
+        'duncan@dickinson.name' {
+            moniker 'Duncan Dickinson'
+            twitter 'dedickinson'
+            role 'owner'
+        }
+    }
+
+    project.ext.basePom = new NodeBuilder().pom {
+        inceptionYear project.ext.inceptionYear
+        issueManagement {
+            system 'GitHub'
+            url 'https://github.com/pomes/pomes/issues'
+        }
+        ciManagement {
+            system 'TravisCI'
+            url 'https://travis-ci.org/pomes/pomes'
+        }
     }
 
     task groovydocJar(type: Jar, dependsOn: groovydoc) {
-        classifier = 'javadoc'
+        classifier = 'groovydoc'
         from groovydoc.destinationDir
-    }
-
-    def bintrayInfoFileName = 'bintray-descriptor.bintray-info.json'
-
-    task createBintrayInfoFile() {
-        File outputFile = new File("$projectDir/$bintrayInfoFileName")
-        outputs.file outputFile
-        def pom = project.ext.basePom
-        //See: https://bintray.com/docs/api/#_create_package
-        Map info = [
-                package: [
-                        name                   : project.name,
-                        repo                   : 'pomes/pomes',
-                        //subject                : "eyalbr",
-                        desc                   : description,
-                        website_url            : pom.url[0].value(),
-                        issue_tracker_url      : pom.issueManagement[0].url[0].value(),
-                        vcs_url                : 'https://github.com/pomes/pomes.git',
-                        github_repo            : 'pomes/pomes',
-                        licenses               : ['Apache-2.0'],
-                        labels                 : ['maven', 'aether', 'groovy'],
-                        public_download_numbers: true,
-                        public_stats           : false
-                ],
-                version: [
-                        name    : project.version,
-                        released: LocalDateTime.now().toString(),
-                        gpgSign : false
-                ],
-                publish: true
-        ]
-        outputFile.write(JsonOutput.prettyPrint(JsonOutput.toJson(info)))
     }
 
     publishing {
         publications {
-            mavenJava(MavenPublication) {
-                from components.java
-                artifact sourcesJar
-                artifact groovydocJar
-
-                artifact("$projectDir/$bintrayInfoFileName") {
-                    extension "bintray-info.json"
-                }
-
+            nebula(MavenPublication) { // if maven-publish is applied
+                artifact tasks.groovydocJar
                 pom.withXml {
                     project.ext.basePom.each { n ->
                         asNode().append n
@@ -163,21 +111,78 @@ configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-ut
         }
     }
 
+    nebulaRelease {
+
+    }
+
     artifactory {
-        //See: https://www.jfrog.com/confluence/display/RTF/Gradle+Artifactory+Plugin
-        //See: https://artifactory.jfrog.org/confluence/display/RTF/Deploying+Snapshots+to+oss.jfrog.org#DeployingSnapshotstooss.jfrog.org-WorkingwithOJO
         contextUrl = 'https://oss.jfrog.org/artifactory/'
         publish {
             repository {
-                repoKey = 'oss-snapshot-local' // The Artifactory repository key to publish to
-                username = ext.secrets.artifactoryUser // The publisher user name
-                password = ext.secrets.artifactoryPassword // The publisher password
-                maven = true
+                repoKey = 'oss-snapshot-local'
+                username = project.ext.secrets.bintrayUser
+                password = project.ext.secrets.bintrayKey
             }
             defaults {
-                publications('mavenJava')
+                publications('nebula')
             }
         }
+    }
+
+    bintray {
+        user = project.ext.secrets.bintrayUser
+        key = project.ext.secrets.bintrayKey
+        pkg {
+            repo = 'pomes'
+            userOrg = 'pomes'
+            issueTrackerUrl = project.ext.basePom.issueManagement[0].url[0].value()
+            labels = ['maven', 'aether', 'groovy']
+        }
+    }
+}
+
+project(':pomes-core') {
+    description = 'Core library for Pomes'
+
+    dependencies {
+        def aetherVersion = '1.1.0'
+        def mavenVersion = '3.3.3'
+
+        compile "org.eclipse.aether:aether-api:$aetherVersion"
+        compile "org.eclipse.aether:aether-util:$aetherVersion"
+        compile "org.eclipse.aether:aether-impl:$aetherVersion"
+        compile "org.eclipse.aether:aether-connector-basic:$aetherVersion"
+        compile "org.eclipse.aether:aether-transport-file:$aetherVersion"
+        compile "org.eclipse.aether:aether-transport-http:$aetherVersion"
+        compile "org.eclipse.aether:aether-transport-wagon:$aetherVersion"
+        compile 'org.apache.maven.wagon:wagon-ssh:1.0'
+        compile "org.apache.maven:maven-aether-provider:$mavenVersion"
+        compile "org.apache.maven:maven:$mavenVersion"
+        compile 'org.apache.maven:maven-project:2.2.1'
+
+        compile 'org.glassfish.jersey.core:jersey-client:2.22.1'
+        compile 'org.jsoup:jsoup:1.9.1'
+        compile 'ch.qos.logback:logback-classic:1.1.3'
+
+        testCompile 'co.freeside:betamax:1.1.2'
+    }
+}
+
+project(':pomes-util') {
+    description = 'Utility library for Pomes'
+}
+
+project(':pomes-cli') {
+    description = 'The command line tool for Pomes'
+
+    apply plugin: 'application'
+    mainClassName = 'com.github.pomes.cli.App'
+
+    dependencies {
+        compile project(':pomes-core')
+        compile 'com.beust:jcommander:1.48'
+        compile 'ch.qos.logback:logback-classic:1.1.3'
+        compile 'org.yaml:snakeyaml:1.17'
     }
 }
 
