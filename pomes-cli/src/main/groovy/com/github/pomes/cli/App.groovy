@@ -32,8 +32,9 @@ import java.util.ResourceBundle
 @Parameters(resourceBundle = 'com.github.pomes.cli.MessageBundle')
 class App {
     MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
+    MessageBundle versionBundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.Version'))
 
-    final String programVersion = bundle.getString('programVersion')
+    final String programVersion = versionBundle.getString('version')
     final String programName = bundle.getString('programName')
 
     Context context
