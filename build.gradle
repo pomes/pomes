@@ -59,7 +59,7 @@ configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-ut
     sourceCompatibility = 1.8
 
     group = 'com.github.pomes'
-    version = '0.1.0-SNAPSHOT'
+    //version = '0.1.0'
 
     dependencies {
         compile "org.codehaus.groovy:groovy-all:$groovyVersion"
