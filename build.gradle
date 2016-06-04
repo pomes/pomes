@@ -33,7 +33,7 @@ allprojects {
     ext {
         secrets = getSecrets()
     }
-
+    version = '0.1.0'
     wrapper.gradleVersion = gradleVersion
 }
 
@@ -171,7 +171,7 @@ project(':pomes-cli') {
         versionFile.text = "version=${project.version}"
     }
 
-    rootProject.tasks.release.dependsOn tasks.setVersionFile
+    //rootProject.tasks.release.dependsOn tasks.setVersionFile
 }
 
 Properties getSecrets() {
