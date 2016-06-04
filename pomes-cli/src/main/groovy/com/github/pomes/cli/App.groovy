@@ -90,8 +90,8 @@ class App {
         Node response = new Node(null, 'response')
 
         if (version) {
-            new Node(response, 'version', [name   : bundle.getString('programName'),
-                                           version: bundle.getString('programVersion')])
+            new Node(response, 'version', [name   : programName,
+                                           version: programVersion])
             return response
         }
 
