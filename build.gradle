@@ -9,7 +9,6 @@ buildscript {
         classpath 'com.netflix.nebula:nebula-release-plugin:4.0.1'
         classpath 'com.netflix.nebula:nebula-bintray-plugin:3.3.4'
         classpath 'org.eclipse.jgit:org.eclipse.jgit:3.2.0.201312181205-r'
-        classpath 'org.ajoberstar:gradle-git:1.4.2'
     }
 }
 
@@ -22,18 +21,14 @@ plugins {
 
 description = 'Base project for Pomes'
 
+apply plugin: 'nebula.nebula-release'
+release {
+    defaultVersionStrategy = SNAPSHOT
+}
+
 allprojects {
     repositories {
         jcenter()
-    }
-
-    apply plugin: 'org.ajoberstar.grgit'
-    apply plugin: 'org.ajoberstar.release-base'
-    apply plugin: 'nebula.nebula-release'
-
-    release {
-        versionStrategy FINAL
-        defaultVersionStrategy = SNAPSHOT
     }
 
     ext {
