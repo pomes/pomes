@@ -29,8 +29,6 @@ import org.eclipse.aether.version.Version
 @Slf4j
 @Parameters(commandNames = ['query'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionQuery')
 class CommandQuery implements Command {
-    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
-
     @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
 
@@ -39,6 +37,7 @@ class CommandQuery implements Command {
 
     @Override
     Node handleRequest(Context context) {
+        MessageBundle bundle = context.app.bundle
         Node response = new Node(null, 'query')
         Node coordinatesNode = new Node(response, 'coordinates')
         Resolver resolver = context.resolver

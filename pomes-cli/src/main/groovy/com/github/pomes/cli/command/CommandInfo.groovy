@@ -31,7 +31,6 @@ import org.eclipse.aether.graph.Dependency
 @Slf4j
 @Parameters(commandNames = ['info'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionInfo')
 class CommandInfo implements Command {
-    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
 
     @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
@@ -44,6 +43,7 @@ class CommandInfo implements Command {
 
     @Override
     Node handleRequest(Context context) {
+        MessageBundle bundle = context.app.bundle
         Node response = new Node(null, 'info')
         Node coordinatesNode = new Node(response, 'coordinates')
         Resolver resolver = context.resolver

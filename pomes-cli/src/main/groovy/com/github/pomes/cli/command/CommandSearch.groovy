@@ -26,8 +26,6 @@ import groovy.util.logging.Slf4j
 @Slf4j
 @Parameters(commandNames = ['search'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionSearch')
 class CommandSearch implements Command {
-    MessageBundle bundle = new MessageBundle(ResourceBundle.getBundle('com.github.pomes.cli.MessageBundle'))
-
     @Parameter(descriptionKey = 'parameterSearchText')
     List<String> queryText
 
@@ -47,6 +45,7 @@ class CommandSearch implements Command {
 
     @Override
     Node handleRequest(Context context) {
+        MessageBundle bundle = context.app.bundle
         Node response = new Node(null, 'search')
         if (!isValid()) {
             new Node(response, 'error', [message: bundle.getString('error.commandSearchIllegalArgument')])
