@@ -18,7 +18,7 @@ Pomes is released in two ways:
 * As a maven library:
     * Through [Bintray](https://bintray.com/pomes/pomes)
 
-For release notes, please refer to the [release directory](tree/master/release/)
+For release notes, please refer to the [release directory](https://github.com/pomes/pomes/tree/master/release)
 
 ### Snapshots
 I publish snapshots to [JFrog's OSS repository](https://oss.jfrog.org/webapp/#/artifacts/browse/simple/General/oss-snapshot-local/com/github/pomes)
