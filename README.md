@@ -2,12 +2,25 @@
 
 [![Build Status](https://travis-ci.org/pomes/pomes.svg?branch=master)](https://travis-ci.org/pomes/pomes)
 
-_A library and command-line tool for searching Maven repositories._
+![Pomes logo - a pomegranate](https://github.com/pomes/pomes/blob/master/resources/logo/pomegranate-300px.png)
 
-## Core
-[![Get automatic notifications about new "pomes-core" versions](https://www.bintray.com/docs/images/bintray_badge_color.png)](https://bintray.com/pomes/pomes/pomes-core/view?source=watch)
-[ ![Download](https://api.bintray.com/packages/pomes/pomes/pomes-core/images/download.svg) ](https://bintray.com/pomes/pomes/pomes-core/_latestVersion)
+Pomes is a library and command-line tool for searching Maven-based repositories and otherwise working with
+Java libraries utilising the Maven POM approach to distribution.
 
-## CLI
-[![Get automatic notifications about new "pomes-cli" versions](https://www.bintray.com/docs/images/bintray_badge_color.png)](https://bintray.com/pomes/pomes/pomes-cli/view?source=watch)
-[ ![Download](https://api.bintray.com/packages/pomes/pomes/pomes-cli/images/download.svg) ](https://bintray.com/pomes/pomes/pomes-cli/_latestVersion)
+I'm still working towards the first release so watch this space.
+
+## Releases
+Pomes is released in two ways:
+
+* As an installable distribution:
+    * [Bintray](https://bintray.com/pomes/Release)
+    * [GitHub](https://github.com/pomes/pomes/releases)
+* As a maven library:
+    * Through [Bintray](https://bintray.com/pomes/pomes)
+
+For release notes, please refer to the [release directory](tree/master/release/)
+
+## Snapshots
+I publish snapshots to [JFrog's OSS repository](https://oss.jfrog.org/webapp/#/artifacts/browse/simple/General/oss-snapshot-local/com/github/pomes)
+
+Thanks to [JFrog](https://www.jfrog.com/) for making this service freely available to open source projects.
