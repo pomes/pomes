@@ -2,177 +2,39 @@ buildscript {
     repositories {
         jcenter()
     }
-    dependencies {
-        classpath 'com.netflix.nebula:gradle-info-plugin:3.+'
-        classpath 'com.netflix.nebula:gradle-contacts-plugin:1.9.+'
-        classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
-        classpath 'com.netflix.nebula:nebula-release-plugin:4.0.1'
-        classpath 'com.netflix.nebula:nebula-bintray-plugin:3.3.4'
-    }
 }
-
-import static org.ajoberstar.gradle.git.release.opinion.Strategies.*
 
 plugins {
     id 'idea'
     id 'eclipse'
+    id "com.jfrog.bintray" version "1.6"
+    id "com.jfrog.artifactory" version "4.3.0"
+}
+
+apply plugin: com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
+
+ext {
+    secrets = getSecrets()
+    groovyProjects = ['pomes-core', 'pomes-cli', 'pomes-util']
 }
 
 description = 'Base project for Pomes'
 
-apply plugin: 'nebula.nebula-release'
-release {
-    defaultVersionStrategy = SNAPSHOT
-}
+
+wrapper.gradleVersion = gradleVersion
+
+releaseme {}
 
 allprojects {
+    //version = determineCurrentVersion()
     repositories {
         jcenter()
     }
 
-    ext {
-        secrets = getSecrets()
-    }
-    version = '0.1.0'
-    wrapper.gradleVersion = gradleVersion
 }
 
-configure(subprojects.findAll { it.name in ['pomes-core', 'pomes-cli', 'pomes-util'] }) {
-    apply plugin: 'groovy'
-    apply plugin: 'build-dashboard'
-    apply plugin: 'project-report'
-    apply plugin: 'jacoco'
-    apply plugin: 'nebula.info'
-    apply plugin: 'nebula.maven-publish'
-    apply plugin: 'nebula.source-jar'
-    apply plugin: 'nebula.nebula-bintray'
-    apply plugin: 'nebula.maven-apache-license'
-    apply plugin: 'nebula.contacts'
-    apply plugin: 'nebula.nebula-ojo-publishing'
-
-    sourceCompatibility = 1.8
-
-    dependencies {
-        compile "org.codehaus.groovy:groovy-all:$groovyVersion"
-        testCompile "org.spockframework:spock-core:$spockVersion"
-    }
-
-    apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
-
-    contacts {
-        'duncan@dickinson.name' {
-            moniker 'Duncan Dickinson'
-            twitter 'dedickinson'
-            role 'owner'
-        }
-    }
-
-    project.ext.basePom = new NodeBuilder().pom {
-        inceptionYear project.ext.inceptionYear
-        issueManagement {
-            system 'GitHub'
-            url 'https://github.com/pomes/pomes/issues'
-        }
-        ciManagement {
-            system 'TravisCI'
-            url 'https://travis-ci.org/pomes/pomes'
-        }
-    }
-
-    task groovydocJar(type: Jar, dependsOn: groovydoc) {
-        classifier = 'groovydoc'
-        from groovydoc.destinationDir
-    }
-
-    publishing {
-        publications {
-            nebula(MavenPublication) { // if maven-publish is applied
-                artifact tasks.groovydocJar
-                pom.withXml {
-                    project.ext.basePom.each { n ->
-                        asNode().append n
-                    }
-                }
-            }
-        }
-    }
-
-    artifactory {
-        contextUrl = 'https://oss.jfrog.org/artifactory/'
-        publish {
-            repository {
-                repoKey = 'oss-snapshot-local'
-                username = project.ext.secrets.bintrayUser
-                password = project.ext.secrets.bintrayKey
-            }
-            defaults {
-                publications('nebula')
-            }
-        }
-    }
-
-    bintray {
-        user = project.ext.secrets.bintrayUser
-        key = project.ext.secrets.bintrayKey
-        pkg {
-            repo = 'pomes'
-            userOrg = 'pomes'
-            issueTrackerUrl = project.ext.basePom.issueManagement[0].url[0].value()
-            labels = ['maven', 'aether', 'groovy']
-        }
-    }
-}
-
-project(':pomes-core') {
-    description = 'Core library for Pomes'
-
-    dependencies {
-        compile "org.eclipse.aether:aether-api:$aetherVersion"
-        compile "org.eclipse.aether:aether-util:$aetherVersion"
-        compile "org.eclipse.aether:aether-impl:$aetherVersion"
-        compile "org.eclipse.aether:aether-connector-basic:$aetherVersion"
-        compile "org.eclipse.aether:aether-transport-file:$aetherVersion"
-        compile "org.eclipse.aether:aether-transport-http:$aetherVersion"
-        compile "org.eclipse.aether:aether-transport-wagon:$aetherVersion"
-        compile 'org.apache.maven.wagon:wagon-ssh:1.0'
-        compile "org.apache.maven:maven-aether-provider:$mavenVersion"
-        compile "org.apache.maven:maven:$mavenVersion"
-        compile 'org.apache.maven:maven-project:2.2.1'
-
-        compile 'org.glassfish.jersey.core:jersey-client:2.22.1'
-        compile 'org.jsoup:jsoup:1.9.1'
-        compile dependencyLogging
-
-        testCompile 'co.freeside:betamax:1.1.2'
-    }
-}
-
-project(':pomes-util') {
-    description = 'Utility library for Pomes'
-}
-
-project(':pomes-cli') {
-    description = 'The command line tool for Pomes'
-
-    apply plugin: 'application'
-    mainClassName = 'com.github.pomes.cli.App'
-
-    dependencies {
-        compile project(':pomes-core')
-        compile 'com.beust:jcommander:1.48'
-        compile dependencyLogging
-        compile 'org.yaml:snakeyaml:1.17'
-    }
-
-    task setVersionFile() {
-        def versionFile = file("src/main/resources/com/github/pomes/cli/Version.properties")
-        inputs.file project.buildFile
-        outputs.file versionFile
-        versionFile.text = "version=${project.version}"
-    }
-
-    //rootProject.tasks.release.dependsOn tasks.setVersionFile
-}
+apply from: "$rootProject.projectDir/gradle/groovy-projects.gradle"
+apply from: "$rootProject.projectDir/gradle/publish.gradle"
 
 Properties getSecrets() {
     def props = new Properties()
