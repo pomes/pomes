@@ -15,6 +15,11 @@
  */
 package com.github.pomes.gradle.releaseme
 
+import com.github.pomes.gradle.releaseme.project.CiManagement
+import com.github.pomes.gradle.releaseme.project.IssueManagement
+import com.github.pomes.gradle.releaseme.project.License
+import com.github.pomes.gradle.releaseme.project.ProjectInfo
+import com.github.pomes.gradle.releaseme.project.Scm
 import groovy.util.logging.Slf4j
 import org.ajoberstar.grgit.Status
 import org.ajoberstar.grgit.Tag
@@ -96,8 +101,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             description = 'Gathers together various project details.'
 
             doLast {
-
-                print generateProjectInfo(project, extension.ghRepo).toYaml()
+                println generateProjectInfo(project, extension.ghRepo).toYaml()
             }
         }
     }
@@ -131,10 +135,10 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
                 scm: [system               : 'git',
                       url                : ghRepo.gitHttpTransportUrl().toURL(),
                       connection         : "scm:git:${ghRepo.gitHttpTransportUrl()}",
-                      developerConnection: "scm:git:${ghRepo.gitHttpTransportUrl()}"],
-                licenses: [[name: ghRepo.license.name, url: ghRepo.license.url]],
-                issueManagement: [system: 'GitHub', url: "${ghRepo.htmlUrl}/issues".toURL()],
-                ciManagement: [system: 'TravisCI', url: "https://travis-ci.org/${ghRepo.fullName}".toURL()]
+                      developerConnection: "scm:git:${ghRepo.gitHttpTransportUrl()}"] as Scm,
+                licenses: [[name: ghRepo.license.name, url: ghRepo.license.url] as License],
+                issueManagement: [system: 'GitHub', url: "${ghRepo.htmlUrl}/issues".toURL()] as IssueManagement,
+                ciManagement: [system: 'TravisCI', url: "https://travis-ci.org/${ghRepo.fullName}".toURL()] as CiManagement
         )
     }
 
