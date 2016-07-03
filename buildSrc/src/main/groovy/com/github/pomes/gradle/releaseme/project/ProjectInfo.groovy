@@ -22,7 +22,7 @@ import java.time.Year
 
 @Canonical
 class ProjectInfo {
-    String name, description
+    String name, description, version
     URL url
     Year inceptionYear
     Scm scm
@@ -33,6 +33,7 @@ class ProjectInfo {
     void toYaml(Writer writer) {
         writer << "project: \n"
         writer << "  name: $name\n"
+        writer << "  version: $version\n"
         writer << "  description: $description\n"
         writer << "  url: $url\n"
         writer << "  inceptionYear: $inceptionYear\n"
@@ -41,7 +42,7 @@ class ProjectInfo {
         writer << "  licenses: \n"
         licenses.each {lic ->
             writer << "    - \n"
-            lic.toYaml(writer, ' '*8)
+            lic.toYaml(writer, ' '*5)
         }
         writer << "  issueManagement: \n"
         issueManagement.toYaml(writer)

@@ -1,8 +1,11 @@
+import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
+
 configure(subprojects.findAll { it.name in groovyProjects}) {
     apply plugin: 'groovy'
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'
     apply plugin: 'jacoco'
+    apply plugin: com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
 
     sourceCompatibility = 1.8
 
@@ -13,14 +16,9 @@ configure(subprojects.findAll { it.name in groovyProjects}) {
 
     apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
 
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    task groovydocJar(type: Jar, dependsOn: groovydoc) {
-        classifier = 'groovydoc'
-        from groovydoc.destinationDir
+    releaseme {
+        releaseProject = true
+        bintrayRelease = true
     }
 }
 
@@ -55,9 +53,10 @@ project(':pomes-util') {
 project(':pomes-cli') {
     description = 'The command line tool for Pomes'
 
-    apply plugin: 'application'
-    apply plugin: 'distribution'
-    mainClassName = 'com.github.pomes.cli.App'
+    releaseme {
+        mainClassName = 'com.github.pomes.cli.App'
+        githubRelease = true
+    }
 
     dependencies {
         compile project(':pomes-core')
@@ -66,22 +65,8 @@ project(':pomes-cli') {
         compile 'org.yaml:snakeyaml:1.17'
     }
 
-    task setVersionFile << {
-        def versionFile = file("src/main/resources/com/github/pomes/cli/Version.properties")
-        inputs.file project.buildFile
-        outputs.file versionFile
-        versionFile.text = "version=${project.version}"
+    task updateVersion(dependsOn: IShallBeReleasedPlugin.CONFIGURE_VERSION_FILE_TASK_NAME) << {
+        description 'Updates the Version.properties file'
+
     }
-
-    //rootProject.tasks.release.dependsOn tasks.setVersionFile
-
-    distributions {
-        main {
-            baseName = "${project.name}-"
-            contents {
-                from { ["${project.rootDir}/LICENSE"] }
-            }
-        }
-    }
-
 }

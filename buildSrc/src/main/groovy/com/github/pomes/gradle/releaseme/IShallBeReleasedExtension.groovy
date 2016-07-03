@@ -16,6 +16,7 @@
 
 package com.github.pomes.gradle.releaseme
 
+import com.github.pomes.gradle.releaseme.project.ProjectInfo
 import groovy.transform.ToString
 import groovy.util.logging.Slf4j
 import org.ajoberstar.grgit.Grgit
@@ -25,34 +26,59 @@ import org.kohsuke.github.GitHub
 import org.kohsuke.github.HttpConnector
 import org.kohsuke.github.extras.PreviewHttpConnector
 
-import static com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin.determineCurrentVersion
-
 @Slf4j
 @ToString(includeNames = true)
 class IShallBeReleasedExtension {
     protected final Project project
 
+    static final String DEFAULT_RELEASE_TAG_PREFIX = 'version'
+
     String remote = 'origin'
 
-    Grgit localGit
+    final Grgit localGit
 
-    GHRepository ghRepo
+    final GHRepository ghRepo
+
+    URL ghUrl
 
     HttpConnector ghConnector = new PreviewHttpConnector()
 
-    String version
+    String nextReleaseVersion
+
+    ProjectInfo projectInfo
+
+    Boolean releaseProject = false
+
+    String mainClassName
+
+    Boolean githubRelease = false
+
+    Boolean bintrayRelease = false
+
+    String releaseTagPrefix = DEFAULT_RELEASE_TAG_PREFIX
 
     IShallBeReleasedExtension(Project project) {
         this.project = project
 
         localGit = Grgit.open(currentDir: "${project.rootDir}")
 
-        URL ghUrl = localGit.remote.list().find { it.name == 'origin' }?.url.toURL()
+        ghUrl = localGit.remote.list().find { it.name == remote }?.url.toURL()
 
         GitHub gh = GitHub.connect()
         gh.connector = ghConnector
         ghRepo = gh.getRepository((ghUrl.path - '.git').substring(1))
+    }
 
-        version = determineCurrentVersion(this)
+    String toString() {
+        """\
+Project name: ${project.name}
+Project version: ${project.version}
+Release this project: $releaseProject
+Github project: ${ghRepo.fullName}
+Github URL: $ghUrl
+Release to Github: $githubRelease
+Release to Bintray: $bintrayRelease
+Main class name: $mainClassName
+Release (git) tag prefix: $releaseTagPrefix"""
     }
 }
