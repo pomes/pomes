@@ -73,7 +73,7 @@ class IShallBeReleasedExtension {
         } else {
             UrlValidator urlValidator = new UrlValidator()
             if (urlValidator.isValid(ghConnection)) {
-                ghProject = ghConnection.toURL().path - '.git'
+                ghProject = (ghConnection.toURL().path - '.git').substring(1)
             } else {
                 throw new GradleException("Unable to determine the Github project for $ghConnection")
             }
