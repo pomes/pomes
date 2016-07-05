@@ -49,9 +49,9 @@ class IShallBeReleasedExtension {
 
     ProjectInfo projectInfo
 
-    Boolean releaseProject = false
-
     String mainClassName
+
+    Boolean releaseProject = false
 
     Boolean githubRelease = false
 

@@ -15,6 +15,7 @@
  */
 package com.github.pomes.gradle.releaseme
 
+import com.github.pomes.gradle.releaseme.project.*
 import groovy.util.logging.Slf4j
 import org.ajoberstar.grgit.Grgit
 import org.ajoberstar.grgit.Status
@@ -22,10 +23,10 @@ import org.ajoberstar.grgit.Tag
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.distribution.plugins.DistributionPlugin
 import org.gradle.api.plugins.GroovyPlugin
 import org.gradle.api.tasks.bundling.Jar
 import org.kohsuke.github.GHRepository
-import com.github.pomes.gradle.releaseme.project.*
 
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -56,21 +57,19 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
 
         project.version = determineCurrentVersion(extension.localGit)
 
-        project.configure(project) {
-            if (extension.releaseProject && !project.plugins.hasPlugin('distribution')) {
-                log.info 'Applying the distribution plugin'
-                apply plugin: 'distribution'
-                /*
-                distributions {
-                    main {}
-                    bin {
-                        contents {
-                            from { ["${project.rootDir}/LICENSE"] }
-                        }
+        if (extension.releaseProject && extension.githubRelease) {
+            project.plugins.apply(DistributionPlugin)
+
+            /*
+            distributions {
+                main {}
+                bin {
+                    contents {
+                        from { ["${project.rootDir}/LICENSE"] }
                     }
                 }
-                */
             }
+            */
         }
 
         configureTasks(project, extension)

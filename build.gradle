@@ -7,8 +7,9 @@ buildscript {
 plugins {
     id 'idea'
     id 'eclipse'
-    id "com.jfrog.bintray" version "1.6"
-    id "com.jfrog.artifactory" version "4.3.0"
+    id 'com.gradle.build-scan' version '1.0'
+    //id "com.jfrog.bintray" version "1.6"
+    //id "com.jfrog.artifactory" version "4.3.0"
 }
 
 ext {
@@ -17,6 +18,11 @@ ext {
 }
 
 wrapper.gradleVersion = gradleVersion
+
+buildScan {
+    licenseAgreementUrl = 'https://gradle.com/terms-of-service'
+    licenseAgree = 'yes'
+}
 
 allprojects {
     repositories {
