@@ -167,3 +167,5 @@ pomes-util/bintray-descriptor.bintray-info.json
 pomes-util/src/main/java/
 pomes-util/src/main/resources/
 pomes-util/src/test/
+
+!libs/**/*.jar

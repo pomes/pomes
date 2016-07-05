@@ -25,6 +25,8 @@ import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHub
 import org.kohsuke.github.HttpConnector
 import org.kohsuke.github.extras.PreviewHttpConnector
+import org.gradle.api.GradleException
+import org.apache.commons.validator.routines.UrlValidator
 
 @Slf4j
 @ToString(includeNames = true)
@@ -39,7 +41,7 @@ class IShallBeReleasedExtension {
 
     final GHRepository ghRepo
 
-    URL ghUrl
+    String ghConnection, ghProject
 
     HttpConnector ghConnector = new PreviewHttpConnector()
 
@@ -61,12 +63,27 @@ class IShallBeReleasedExtension {
         this.project = project
 
         localGit = Grgit.open(currentDir: "${project.rootDir}")
+        //log.debug "Local git root dir: ${localGit.rootDir}"
 
-        ghUrl = localGit.remote.list().find { it.name == remote }?.url.toURL()
+        ghConnection = localGit.remote.list().find { it.name == remote }?.url
+        log.debug "Remote GitHub connection: $ghConnection"
+
+        if (ghConnection.startsWith('git@github.com')) {
+            ghProject = ghConnection.tokenize(':')[1] - '.git'
+        } else {
+            UrlValidator urlValidator = new UrlValidator(['https'])
+            if (urlValidator.isValid(ghConnection)) {
+                ghProject = ghConnection.toURL().path - '.git'
+            } else {
+                throw new GradleException("Unable to determine the Github project for $ghConnection")
+            }
+        }
+
+        log.debug "GitHub project: $ghProject"
 
         GitHub gh = GitHub.connect()
         gh.connector = ghConnector
-        ghRepo = gh.getRepository((ghUrl.path - '.git').substring(1))
+        ghRepo = gh.getRepository(ghProject)
     }
 
     String toString() {
@@ -75,7 +92,7 @@ Project name: ${project.name}
 Project version: ${project.version}
 Release this project: $releaseProject
 Github project: ${ghRepo.fullName}
-Github URL: $ghUrl
+Github connection: $ghConnection
 Release to Github: $githubRelease
 Release to Bintray: $bintrayRelease
 Main class name: $mainClassName
