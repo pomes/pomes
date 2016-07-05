@@ -71,7 +71,8 @@ class IShallBeReleasedExtension {
         if (ghConnection.startsWith('git@github.com')) {
             ghProject = ghConnection.tokenize(':')[1] - '.git'
         } else {
-            UrlValidator urlValidator = new UrlValidator(['https'])
+            String[] schemes = {'https'}
+            UrlValidator urlValidator = new UrlValidator(schemes)
             if (urlValidator.isValid(ghConnection)) {
                 ghProject = ghConnection.toURL().path - '.git'
             } else {
