@@ -3,7 +3,16 @@ language: groovy
 jdk:
   - oraclejdk8
 
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
 before_install:
   - chmod +x gradlew
   - openssl aes-256-cbc -K $encrypted_bb9481c64672_key -iv $encrypted_bb9481c64672_iv -in secrets.properties.enc -out secrets.properties -d
   - mvn install:install-file -Dfile=libs/github-api-1.77-SNAPSHOT/github-api-1.77-SNAPSHOT.jar -DpomFile=libs/github-api-1.77-SNAPSHOT/pom.xml -DgroupId=org.kohsuke -DartifactId=github-api -Dversion=1.77-SNAPSHOT -Dpackaging=jar
+
+install: ./gradlew assemble --stacktrace
