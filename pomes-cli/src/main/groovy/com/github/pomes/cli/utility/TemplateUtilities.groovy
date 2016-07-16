@@ -1,3 +1,5 @@
+package com.github.pomes.cli.utility
+
 /*
  *    Copyright 2016 Duncan Dickinson
  *
@@ -14,11 +16,11 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli.utility
-
 class TemplateUtilities {
 
-    static URL getTemplateResource(String baseName, OutputFormat format = OutputFormat.text, Locale locale = Locale.getDefault()) {
+    static URL getTemplateResource(String baseName,
+                                   OutputFormat format = OutputFormat.text,
+                                   Locale locale = Locale.getDefault()) {
         getLocalizedResource(baseName, format.extension, locale)
     }
 
@@ -36,8 +38,8 @@ class TemplateUtilities {
     }
 
     static String breakupLongString(String input, Integer maxLineLength = 80, Integer indent = 0) {
-        def output = ""
-        def currentLine = ""
+        def output
+        def currentLine
         for (element in input.tokenize(' ')) {
             if (currentLine.size() + element.size() > maxLineLength - indent) {
                 output <<= "${' ' * indent}$currentLine\n"
@@ -46,6 +48,6 @@ class TemplateUtilities {
             currentLine <<= "$element "
         }
         output <<= "${' ' * indent}$currentLine"
-        return output
+        output
     }
 }

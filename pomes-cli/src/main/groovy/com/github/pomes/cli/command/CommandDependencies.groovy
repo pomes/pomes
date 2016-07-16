@@ -1,3 +1,5 @@
+package com.github.pomes.cli.command
+
 /*
  *    Copyright 2016 Duncan Dickinson
  *
@@ -14,27 +16,24 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli.command
-
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
 import com.github.pomes.cli.Context
 import com.github.pomes.cli.utility.MessageBundle
 import com.github.pomes.core.ArtifactCoordinate
-import com.github.pomes.core.ArtifactExtension
 import com.github.pomes.core.Resolver
-import com.github.pomes.core.Searcher
-import com.github.pomes.core.dependency.graph.display.CommandLineDumper
 import groovy.util.logging.Slf4j
-import org.apache.maven.model.Model
-import org.eclipse.aether.collection.CollectResult
 import org.eclipse.aether.graph.Dependency
 
-import static org.eclipse.aether.util.artifact.JavaScopes.COMPILE
+import static com.github.pomes.cli.command.CommandUtil.*
 
 @Slf4j
-@Parameters(commandNames = ['dependencies'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionDependencies')
+@Parameters(commandNames = ['dependencies'],
+        resourceBundle = 'com.github.pomes.cli.MessageBundle',
+        commandDescriptionKey = 'commandDescriptionDependencies')
 class CommandDependencies implements Command {
+    static final String NODE_DEPENDENCIES = 'dependencies'
+    static final String NODE_DEPENDENCY = 'dependency'
 
     @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
@@ -49,12 +48,12 @@ class CommandDependencies implements Command {
     Node handleRequest(Context context) {
         MessageBundle bundle = context.app.bundle
         Resolver resolver = context.resolver
-        Node response = new Node(null, 'dependencies')
-        Node coordinatesNode = new Node(response, 'coordinates')
+        Node response = new Node(null, NODE_DEPENDENCIES)
+        Node coordinatesNode = new Node(response, NODE_COORDINATES)
         coordinates.each { coordinate ->
-            Node coordinateNode = new Node(coordinatesNode, 'coordinate', [name: coordinate])
-            Node dependenciesNode = new Node(coordinateNode, 'dependencies')
-            log.info bundle.getString('log.commandRequest', 'dependencies', coordinate, latest)
+            Node coordinateNode = new Node(coordinatesNode, NODE_COORDINATES, [name: coordinate])
+            Node dependenciesNode = new Node(coordinateNode, NODE_DEPENDENCIES)
+            log.info bundle.getString('log.commandRequest', NODE_DEPENDENCIES, coordinate, latest)
 
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
 
@@ -70,15 +69,15 @@ class CommandDependencies implements Command {
 
             List<Dependency> dependencyListing = resolver.getDirectDependencies(ac.artifact)
             dependencyListing.each { dep ->
-                new Node(dependenciesNode,'dependency',[
-                        name: dep.artifact.toString(),
+                new Node(dependenciesNode, NODE_DEPENDENCY, [
+                        name      : dep.artifact.toString(),
                         artifactId: dep.artifact.artifactId,
-                        groupId: dep.artifact.groupId,
-                        version: dep.artifact.version,
-                        scope: dep.scope,
+                        groupId   : dep.artifact.groupId,
+                        version   : dep.artifact.version,
+                        scope     : dep.scope,
                         classifier: dep.artifact.classifier,
-                        extension: dep.artifact.extension,
-                        optional: dep.optional])
+                        extension : dep.artifact.extension,
+                        optional  : dep.optional])
             }
         }
         return response

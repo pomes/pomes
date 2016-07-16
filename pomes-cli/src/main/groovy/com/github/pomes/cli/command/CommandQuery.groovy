@@ -13,7 +13,6 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
@@ -26,9 +25,15 @@ import groovy.util.logging.Slf4j
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.version.Version
 
+import static com.github.pomes.cli.command.CommandUtil.NODE_COORDINATE
+import static com.github.pomes.cli.command.CommandUtil.NODE_COORDINATES
+
 @Slf4j
-@Parameters(commandNames = ['query'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionQuery')
+@Parameters(commandNames = ['query'],
+        resourceBundle = 'com.github.pomes.cli.MessageBundle',
+        commandDescriptionKey = 'commandDescriptionQuery')
 class CommandQuery implements Command {
+    static final String NODE_QUERY = 'query'
     @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
 
@@ -38,12 +43,12 @@ class CommandQuery implements Command {
     @Override
     Node handleRequest(Context context) {
         MessageBundle bundle = context.app.bundle
-        Node response = new Node(null, 'query')
-        Node coordinatesNode = new Node(response, 'coordinates')
+        Node response = new Node(null, NODE_QUERY)
+        Node coordinatesNode = new Node(response, NODE_COORDINATES)
         Resolver resolver = context.resolver
         coordinates.each { coordinate ->
-            Node coordinateNode = new Node(coordinatesNode, 'coordinate', [name: coordinate])
-            log.info bundle.getString('log.commandRequest', 'query', coordinate, latest)
+            Node coordinateNode = new Node(coordinatesNode, NODE_COORDINATE, [name: coordinate])
+            log.info bundle.getString('log.commandRequest', NODE_QUERY, coordinate, latest)
 
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
 

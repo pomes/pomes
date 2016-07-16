@@ -1,3 +1,5 @@
+package com.github.pomes.cli.utility
+
 /*
  *    Copyright 2016 Duncan Dickinson
  *
@@ -13,8 +15,6 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-package com.github.pomes.cli.utility
 
 import java.text.MessageFormat
 

@@ -1,3 +1,5 @@
+package com.github.pomes.cli.utility
+
 /*
  *    Copyright 2016 Duncan Dickinson
  *
@@ -14,14 +16,11 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli.utility
-
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.core.FileAppender
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy
-import com.github.pomes.core.repositories.DefaultLocalRepository
 import com.github.pomes.core.repositories.JCenter
 import groovy.util.logging.Slf4j
 import org.eclipse.aether.repository.LocalRepository
@@ -49,17 +48,16 @@ class Configuration {
     LocalRepository localRepository
 
     Configuration(Map config = [:]) {
-        this.configurationFile = config?.settings? Paths.get(settings):
+        this.configurationFile = config?.settings ? Paths.get(settings) :
                 Paths.get(System.getProperty('user.home'), ".${bundle.getString('programName')}")
 
-        this.logLevel = config?.logging?: LogLevel.error
+        this.logLevel = config?.logging ?: LogLevel.error
     }
-
 
     void configure() {
         applicationHome = Paths.get(System.getProperty('user.home'), '.pomes')
 
-        remoteRepositories?: remoteRepositories << JCenter.newJCenterRemoteRepository()
+        remoteRepositories ?: remoteRepositories << JCenter.newJCenterRemoteRepository()
         remoteRepositories.asImmutable()
 
         localRepository = new LocalRepository(applicationHome.resolve('repository').toFile(), null)

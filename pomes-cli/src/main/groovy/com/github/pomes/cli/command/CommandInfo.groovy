@@ -13,7 +13,6 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
@@ -28,10 +27,15 @@ import org.apache.maven.model.Model
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.graph.Dependency
 
-@Slf4j
-@Parameters(commandNames = ['info'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionInfo')
-class CommandInfo implements Command {
+import static com.github.pomes.cli.command.CommandUtil.NODE_COORDINATES
+import static com.github.pomes.cli.command.CommandUtil.NODE_ERROR
 
+@Slf4j
+@Parameters(commandNames = ['info'],
+        resourceBundle = 'com.github.pomes.cli.MessageBundle',
+        commandDescriptionKey = 'commandDescriptionInfo')
+class CommandInfo implements Command {
+    static final String NODE_INFO = 'info'
     @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
 
@@ -44,12 +48,12 @@ class CommandInfo implements Command {
     @Override
     Node handleRequest(Context context) {
         MessageBundle bundle = context.app.bundle
-        Node response = new Node(null, 'info')
-        Node coordinatesNode = new Node(response, 'coordinates')
+        Node response = new Node(null, NODE_INFO)
+        Node coordinatesNode = new Node(response, NODE_COORDINATES)
         Resolver resolver = context.resolver
         coordinates.each { coordinate ->
-            Node coordinateNode = new Node(coordinatesNode, 'coordinate', [name: coordinate])
-            log.info bundle.getString('log.commandRequest', 'info', coordinate, latest)
+            Node coordinateNode = new Node(coordinatesNode, NODE_INFO, [name: coordinate])
+            log.info bundle.getString('log.commandRequest', NODE_INFO, coordinate, latest)
 
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
 
@@ -58,7 +62,7 @@ class CommandInfo implements Command {
             }
 
             if (!ac.version) {
-                new Node(coordinateNode, 'error', [message: bundle.getString('error.GAVRequired', ac)])
+                new Node(coordinateNode, NODE_ERROR, [message: bundle.getString('error.GAVRequired', ac)])
                 return
             }
 

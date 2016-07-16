@@ -9,8 +9,9 @@ import groovy.text.GStringTemplateEngine
 import groovy.util.logging.Slf4j
 import groovy.xml.XmlUtil
 
-import java.nio.file.Files
 import java.util.ResourceBundle
+
+import static com.github.pomes.cli.command.CommandUtil.*
 
 /*
  *    Copyright 2016 Duncan Dickinson
@@ -41,7 +42,7 @@ class App {
 
     Configuration configuration
 
-    final JCommander jc
+    JCommander jc
 
     @Parameter(names = ['-h', '--help'], help = true)
     Boolean help
@@ -58,7 +59,12 @@ class App {
     @Parameter(names = ['-f', '--format'], descriptionKey = 'parameterFormat')
     OutputFormat format = OutputFormat.text
 
-    App() {
+    String getCommand() { jc.parsedCommand }
+
+    void configure(String... args) {
+        parse args
+        configuration = new Configuration(settings: settings, logging: logging)
+        configuration.configure()
         jc = new JCommander(this)
         jc.programName = programName
         CliCommands.values().each { cmd ->
@@ -66,40 +72,33 @@ class App {
         }
     }
 
-    String getCommand() { jc.parsedCommand }
-
-    void configure(String... args) {
-        parse args
-        configuration = new Configuration(settings: settings, logging: logging)
-        configuration.configure()
-    }
-
     Boolean parse(String... args) {
         try {
             jc.parse(args)
             return true
         } catch (MissingCommandException mce) {
-            handleError new Node(null, 'error', [message: bundle.getString('error.missingCommand', args)], mce)
+            handleError new Node(null, NODE_ERROR, [message: bundle.getString('error.missingCommand', args)], mce)
             return false
         } catch (ParameterException pe) {
-            handleError new Node(null, 'error', [message: bundle.getString('error.parameterException', args)], pe)
+            handleError new Node(null, NODE_ERROR, [message: bundle.getString('error.parameterException', args)], pe)
             return false
         }
     }
 
     Node handleRequest() {
-        Node response = new Node(null, 'response')
+        Node response = new Node(null, NODE_RESPONSE)
 
         if (version) {
-            new Node(response, 'version', [name   : programName,
-                                           version: programVersion])
+            response.append
+            new Node(NODE_VERSION, [name   : programName,
+                                    version: programVersion])
             return response
         }
 
         if (help) {
             StringBuilder usage = new StringBuilder()
             jc.usage(usage)
-            new Node(response, 'usage', usage)
+            new Node(response, NODE_USAGE, usage)
             return response
         }
 
@@ -114,9 +113,9 @@ class App {
             log.debug "Calling command: $command.value"
             response.append command.command.handleRequest(context)
         } else {
-            new Node(response, 'error', [message: bundle.getString('error.commandNotFound')])
+            new Node(response, NODE_ERROR, [message: bundle.getString('error.commandNotFound')])
         }
-        return response
+        response
     }
 
     void handleError(Node response) {
@@ -157,7 +156,7 @@ class App {
                 print XmlUtil.serialize(response)
                 break
             case OutputFormat.raw:
-                print response.toString()
+                print response
                 break
             case OutputFormat.text:
             case OutputFormat.html:
@@ -183,7 +182,7 @@ class App {
                                     utilities: [breakupLongString: TemplateUtilities.&breakupLongString]).
                             toString()
                 } else {
-                    new Node(response, 'error', [message: bundle.getString('error.templateNotFound', templatePath)])
+                    new Node(response, NODE_ERROR, [message: bundle.getString('error.templateNotFound', templatePath)])
                     handleError(response)
                 }
         }
@@ -196,7 +195,8 @@ class App {
             cli.configure(args)
             cli.displayResponse cli.handleRequest()
         } catch (any) {
-            cli.handleError new Node(null, 'error', [message: cli.bundle.getString('error.unhandledException', any.message)], any)
+            cli.handleError new Node(null, NODE_ERROR,
+                    [message: cli.bundle.getString('error.unhandledException', any.message)], any)
         }
     }
 

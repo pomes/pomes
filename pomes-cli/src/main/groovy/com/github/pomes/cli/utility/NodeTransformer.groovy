@@ -1,13 +1,13 @@
 package com.github.pomes.cli.utility
 
-import groovy.json.JsonBuilder
 import org.yaml.snakeyaml.Yaml
 
 class NodeTransformer {
 
     /**
      *
-     * @see <a href='http://stackoverflow.com/questions/18830248/converting-xml-to-json-in-groovy'>Stack Overflow answer by Tim Yates</a>
+     * @see <a href='http://stackoverflow.com/questions/18830248/converting-xml-to-json-in-groovy'>
+     *     Stack Overflow answer by Tim Yates</a>
      *
      * @param node
      * @return
@@ -23,13 +23,13 @@ class NodeTransformer {
     static Map nodeToMap(Node node) {
         def handle
         handle = { n ->
-            if (n in String)
+            if (n in String) {
                 return n
-
-            Map retMap = n.attributes()?:[:]
+            }
+            Map retMap = n.attributes() ?: [:]
             List values = n.collect(handle)
             if (values) {
-                List lst = values.split{it in String}
+                List lst = values.split { it in String }
                 if (lst[0]) {
                     retMap << [values: lst[0]]
                 }

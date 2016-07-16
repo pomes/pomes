@@ -13,22 +13,23 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
-import com.github.pomes.cli.CliCommands
 import com.github.pomes.cli.Context
 
-@Parameters(commandNames = ['help'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionHelp')
+@Parameters(commandNames = ['help'],
+        resourceBundle = 'com.github.pomes.cli.MessageBundle',
+        commandDescriptionKey = 'commandDescriptionHelp')
 class CommandHelp implements Command {
+    static final String NODE_HELP = 'help'
     @Parameter(descriptionKey = 'parameterSubCommand')
     List<String> helpSubCommands = []
 
     @Override
     Node handleRequest(Context context) {
-        Node response = new Node(null, 'help')
+        Node response = new Node(null, NODE_HELP)
         if (helpSubCommands) {
             helpSubCommands.each {
                 StringBuilder out = new StringBuilder()

@@ -13,7 +13,6 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
@@ -29,8 +28,12 @@ import groovy.util.logging.Slf4j
 import org.eclipse.aether.resolution.ArtifactResolutionException
 import org.eclipse.aether.resolution.ArtifactResult
 
+import static com.github.pomes.cli.command.CommandUtil.*
+
 @Slf4j
-@Parameters(commandNames = ['get'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionGet')
+@Parameters(commandNames = ['get'],
+        resourceBundle = 'com.github.pomes.cli.MessageBundle',
+        commandDescriptionKey = 'commandDescriptionGet')
 class CommandGet implements Command {
 
     @Parameter(descriptionKey = 'parameterCoordinates')
@@ -49,9 +52,9 @@ class CommandGet implements Command {
     Node handleRequest(Context context) {
         MessageBundle bundle = context.app.bundle
         Node response = new Node(null, 'get')
-        Node coordinatesNode = new Node(response, 'coordinates')
+        Node coordinatesNode = new Node(response, NODE_COORDINATES)
         coordinates.each { coordinate ->
-            Node coordinateNode = new Node(coordinatesNode, 'coordinate', [name: coordinate])
+            Node coordinateNode = new Node(coordinatesNode, NODE_COORDINATE, [name: coordinate])
             log.info bundle.getString('log.commandRequest', 'get', coordinate, latest)
 
             ArtifactCoordinate ac = ArtifactCoordinate.parseCoordinates(coordinate)
@@ -79,7 +82,7 @@ class CommandGet implements Command {
             }
 
             if (!ac.version && !latest) {
-                new Node(coordinateNode, 'error', [message: bundle.getString('error.noVersion', ac)])
+                new Node(coordinateNode, NODE_ERROR, [message: bundle.getString('error.noVersion', ac)])
                 return
             }
 
@@ -88,16 +91,16 @@ class CommandGet implements Command {
             try {
                 result = context.resolver.getArtifact(ac.artifact)
             } catch (ArtifactResolutionException are) {
-                new Node(coordinateNode, 'error', [message: bundle.getString('error.resolutionException', ac, are.message)])
+                new Node(coordinateNode, NODE_ERROR, [message: bundle.getString('error.resolutionException', ac, are.message)])
                 return
             }
 
             if (result?.resolved) {
-                new Node (coordinateNode, 'result', [
+                new Node (coordinateNode, NODE_RESULT, [
                     repository: result.repository.toString(),
                     file: result.artifact.file.absoluteFile.toString()])
             } else {
-                new Node(coordinateNode, 'error', [message: bundle.getString('error.couldNotResolveArtifact', ac)])
+                new Node(coordinateNode, NODE_ERROR, [message: bundle.getString('error.couldNotResolveArtifact', ac)])
                 return
             }
         }

@@ -1,3 +1,5 @@
+package com.github.pomes.cli.command
+
 /*
  *    Copyright 2016 Duncan Dickinson
  *
@@ -14,8 +16,6 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.cli.command
-
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
 import com.github.pomes.cli.Context
@@ -23,13 +23,15 @@ import com.github.pomes.cli.utility.MessageBundle
 import com.github.pomes.core.ArtifactCoordinate
 import com.github.pomes.core.Resolver
 import groovy.util.logging.Slf4j
-import org.apache.maven.model.Model
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.graph.Dependency
 
 @Slf4j
-@Parameters(commandNames = ['check'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = "commandDescriptionCheck")
+@Parameters(commandNames = ['check'],
+        resourceBundle = 'com.github.pomes.cli.MessageBundle',
+        commandDescriptionKey = 'commandDescriptionCheck')
 class CommandCheck implements Command {
+    static final String NODE_CHECK = 'check'
 
     @Parameter(descriptionKey = 'parameterCoordinates')
     List<String> coordinates
@@ -47,7 +49,7 @@ class CommandCheck implements Command {
     Node handleRequest(Context context) {
         MessageBundle bundle = context.app.bundle
         Resolver resolver = context.resolver
-        Node response = new Node(null, 'check')
+        Node response = new Node(null, NODE_CHECK)
         Node coordinatesNode = new Node(response, 'coordinates')
         coordinates.each { coordinate ->
             Node coordinateNode = new Node(coordinatesNode, 'coordinate', [name: coordinate])
@@ -78,6 +80,6 @@ class CommandCheck implements Command {
                 }
             }
         }
-        return response
+        response
     }
 }

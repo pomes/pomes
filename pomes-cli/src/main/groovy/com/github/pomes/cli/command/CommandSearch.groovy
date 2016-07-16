@@ -13,7 +13,6 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.github.pomes.cli.command
 
 import com.beust.jcommander.Parameter
@@ -22,10 +21,14 @@ import com.github.pomes.cli.Context
 import com.github.pomes.cli.utility.MessageBundle
 import com.github.pomes.core.query.RepositoryWebQueryResult
 import groovy.util.logging.Slf4j
+import static com.github.pomes.cli.command.CommandUtil.*
 
 @Slf4j
-@Parameters(commandNames = ['search'], resourceBundle = 'com.github.pomes.cli.MessageBundle', commandDescriptionKey = 'commandDescriptionSearch')
+@Parameters(commandNames = ['search'],
+        resourceBundle = 'com.github.pomes.cli.MessageBundle',
+        commandDescriptionKey = 'commandDescriptionSearch')
 class CommandSearch implements Command {
+    static final String NODE_SEARCH = 'search'
     @Parameter(descriptionKey = 'parameterSearchText')
     List<String> queryText
 
@@ -46,9 +49,9 @@ class CommandSearch implements Command {
     @Override
     Node handleRequest(Context context) {
         MessageBundle bundle = context.app.bundle
-        Node response = new Node(null, 'search')
+        Node response = new Node(null, NODE_SEARCH)
         if (!isValid()) {
-            new Node(response, 'error', [message: bundle.getString('error.commandSearchIllegalArgument')])
+            new Node(response, NODE_ERROR, [message: bundle.getString('error.commandSearchIllegalArgument')])
             return response
         }
 
@@ -64,7 +67,7 @@ class CommandSearch implements Command {
             log.debug bundle.getString('log.searchResultCount', "$groupId:$artifactId", searchResults.size())
         }
 
-        response.append new NodeBuilder().results (
+        response.append new NodeBuilder().results(
                 count: searchResults.size(), query: query,
                 provider: context.searcher.primarySearchProvider.displayName,
                 providerApi: context.searcher.primarySearchProvider.apiUrl) {
