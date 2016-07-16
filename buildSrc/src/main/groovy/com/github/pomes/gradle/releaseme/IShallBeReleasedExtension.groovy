@@ -19,37 +19,16 @@ package com.github.pomes.gradle.releaseme
 import com.github.pomes.gradle.releaseme.project.ProjectInfo
 import groovy.transform.ToString
 import groovy.util.logging.Slf4j
-import org.ajoberstar.grgit.Grgit
-import org.gradle.api.Project
-import org.kohsuke.github.GHRepository
-import org.kohsuke.github.GitHub
-import org.kohsuke.github.HttpConnector
-import org.kohsuke.github.extras.PreviewHttpConnector
-import org.gradle.api.GradleException
-import org.apache.commons.validator.routines.UrlValidator
+
+import static com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin.DEFAULT_RELEASE_TAG_PREFIX
 
 @Slf4j
 @ToString(includeNames = true)
 class IShallBeReleasedExtension {
-    protected final Project project
-
-    static final String DEFAULT_RELEASE_TAG_PREFIX = 'version'
 
     String remote = 'origin'
 
-    final Grgit localGit
-
-    final GHRepository ghRepo
-
-    String ghConnection, ghProject
-
-    HttpConnector ghConnector = new PreviewHttpConnector()
-
-    String nextReleaseVersion
-
-    ProjectInfo projectInfo
-
-    String mainClassName
+    String releaseTagPrefix = DEFAULT_RELEASE_TAG_PREFIX
 
     Boolean releaseProject = false
 
@@ -57,45 +36,7 @@ class IShallBeReleasedExtension {
 
     Boolean bintrayRelease = false
 
-    String releaseTagPrefix = DEFAULT_RELEASE_TAG_PREFIX
+    ProjectInfo projectInfo = null
 
-    IShallBeReleasedExtension(Project project) {
-        this.project = project
-
-        localGit = Grgit.open(currentDir: "${project.rootDir}")
-        //log.debug "Local git root dir: ${localGit.rootDir}"
-
-        ghConnection = localGit.remote.list().find { it.name == remote }?.url
-        log.debug "Remote GitHub connection: $ghConnection"
-
-        if (ghConnection.startsWith('git@github.com')) {
-            ghProject = ghConnection.tokenize(':')[1] - '.git'
-        } else {
-            UrlValidator urlValidator = new UrlValidator()
-            if (urlValidator.isValid(ghConnection)) {
-                ghProject = (ghConnection.toURL().path - '.git').substring(1)
-            } else {
-                throw new GradleException("Unable to determine the Github project for $ghConnection")
-            }
-        }
-
-        log.debug "GitHub project: $ghProject"
-
-        GitHub gh = GitHub.connect()
-        gh.connector = ghConnector
-        ghRepo = gh.getRepository(ghProject)
-    }
-
-    String toString() {
-        """\
-Project name: ${project.name}
-Project version: ${project.version}
-Release this project: $releaseProject
-Github project: ${ghRepo.fullName}
-Github connection: $ghConnection
-Release to Github: $githubRelease
-Release to Bintray: $bintrayRelease
-Main class name: $mainClassName
-Release (git) tag prefix: $releaseTagPrefix"""
-    }
+    Node pom = null
 }

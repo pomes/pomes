@@ -8,8 +8,6 @@ plugins {
     id 'idea'
     id 'eclipse'
     id 'com.gradle.build-scan' version '1.0'
-    //id "com.jfrog.bintray" version "1.6"
-    //id "com.jfrog.artifactory" version "4.3.0"
 }
 
 ext {
@@ -31,7 +29,6 @@ allprojects {
 }
 
 apply from: "$rootProject.projectDir/gradle/groovy-projects.gradle"
-//apply from: "$rootProject.projectDir/gradle/publish.gradle"
 
 Properties getSecrets() {
     def props = new Properties()

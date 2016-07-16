@@ -1,11 +1,15 @@
 import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
 
-configure(subprojects.findAll { it.name in groovyProjects}) {
+configure(subprojects.findAll { it.name in groovyProjects }) {
     apply plugin: 'groovy'
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'
     apply plugin: 'jacoco'
-    apply plugin: com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
+
+    apply plugin: 'maven-publish'
+    //apply plugin: 'com.jfrog.bintray'
+    //apply plugin: 'com.jfrog.artifactory'
+    apply plugin: IShallBeReleasedPlugin
 
     sourceCompatibility = 1.8
 
@@ -20,6 +24,64 @@ configure(subprojects.findAll { it.name in groovyProjects}) {
         releaseProject = true
         bintrayRelease = true
     }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                artifact tasks.groovydocJar
+                artifact tasks.sourcesJar
+                version IShallBeReleasedPlugin.determineMavenVersion(project.version)
+                pom.withXml {
+                    releaseme.pom.each { n ->
+                        asNode().append n
+                    }
+                }
+            }
+        }
+    }
+
+    tasks.whenTaskAdded { task ->
+        if (task.name.equals('generatePomFileForMavenPublication')) {
+            task.dependsOn(IShallBeReleasedPlugin.CONFIGURE_POM_TASK_NAME)
+        }
+    }
+
+    /*
+    task releasemeDetails(dependsOn: [IShallBeReleasedPlugin.DETERMINE_MAVEN_VERSION_TASK_NAME,
+                                      IShallBeReleasedPlugin.CONFIGURE_POM_TASK_NAME,
+                                      IShallBeReleasedPlugin.GENERATE_PROJECT_INFO_TASK_NAME]) {
+        print releaseme
+    }
+    */
+
+    /*
+    artifactory {
+        contextUrl = 'https://oss.jfrog.org/artifactory/'
+        publish {
+            repository {
+                repoKey = 'oss-snapshot-local'
+                username = rootProject.ext.secrets.bintrayUser
+                password = rootProject.ext.secrets.bintrayKey
+            }
+            defaults {
+                publications('maven')
+            }
+        }
+    }
+
+
+    bintray {
+        user = rootProject.ext.secrets.bintrayUser
+        key = rootProject.ext.secrets.bintrayKey
+        pkg {
+            repo = 'pomes'
+            userOrg = 'pomes'
+            //issueTrackerUrl = project.ext.basePom.issueManagement[0].url[0].value()
+            labels = ['maven', 'aether', 'groovy']
+        }
+    }
+    */
+
 }
 
 project(':pomes-core') {
@@ -53,8 +115,10 @@ project(':pomes-util') {
 project(':pomes-cli') {
     description = 'The command line tool for Pomes'
 
+    apply plugin: 'application'
+    mainClassName = 'com.github.pomes.cli.App'
+
     releaseme {
-        mainClassName = 'com.github.pomes.cli.App'
         githubRelease = true
     }
 
@@ -65,8 +129,15 @@ project(':pomes-cli') {
         compile 'org.yaml:snakeyaml:1.17'
     }
 
-    task updateVersion(dependsOn: IShallBeReleasedPlugin.CONFIGURE_VERSION_FILE_TASK_NAME) << {
+    task updateVersion(dependsOn: IShallBeReleasedPlugin.CONFIGURE_VERSION_FILE_TASK_NAME) {
         description 'Updates the Version.properties file'
-
+        File versionPropFile = file('src/main/resources/com/github/pomes/cli/Version.properties')
+        File versionFile = project.rootProject.file('VERSION')
+        outputs.file versionPropFile
+        inputs.file versionFile
+        doLast {
+            versionPropFile.text = "version=${versionFile.text}"
+        }
     }
+    compileGroovy.dependsOn updateVersion
 }
