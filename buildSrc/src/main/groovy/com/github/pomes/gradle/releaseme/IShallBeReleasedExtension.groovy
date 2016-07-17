@@ -19,6 +19,7 @@ package com.github.pomes.gradle.releaseme
 import com.github.pomes.gradle.releaseme.project.ProjectInfo
 import groovy.transform.ToString
 import groovy.util.logging.Slf4j
+import org.kohsuke.github.GitHub
 
 import static com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin.DEFAULT_RELEASE_TAG_PREFIX
 
@@ -39,4 +40,6 @@ class IShallBeReleasedExtension {
     ProjectInfo projectInfo = null
 
     Node pom = null
+
+    GitHub gitHub = null
 }

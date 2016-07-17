@@ -97,16 +97,16 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         }
         log.debug "GitHub project: $ghProject"
 
-        GitHub gh
+
         try {
-            gh = GitHub.connect()
+            extension.gitHub = GitHub.connect()
         } catch (IOException ex) {
             throw new GradleException('Failed when trying to connect to GitHub')
         }
-        gh.connector = ghConnector
+        extension.gitHub.connector = ghConnector
 
         try {
-            ghRepo = gh.getRepository(ghProject)
+            ghRepo = extension.gitHub.getRepository(ghProject)
         } catch (IOException ex) {
             throw new GradleException("Failed when trying to connect to GitHub project ($ghProject)")
         }
@@ -114,7 +114,6 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         project.version = determineCurrentVersion(localGit)
 
         configureTasks(project, extension)
-
     }
 
     private void configureTasks(final Project project, final IShallBeReleasedExtension extension) {

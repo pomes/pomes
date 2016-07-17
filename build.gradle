@@ -10,6 +10,12 @@ plugins {
     id 'com.gradle.build-scan' version '1.0'
 }
 
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+
 ext {
     secrets = getSecrets()
     groovyProjects = ['pomes-core', 'pomes-cli', 'pomes-util']
@@ -20,12 +26,6 @@ wrapper.gradleVersion = gradleVersion
 buildScan {
     licenseAgreementUrl = 'https://gradle.com/terms-of-service'
     licenseAgree = 'yes'
-}
-
-allprojects {
-    repositories {
-        jcenter()
-    }
 }
 
 apply from: "$rootProject.projectDir/gradle/groovy-projects.gradle"

@@ -1,15 +1,21 @@
 import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
 
 configure(subprojects.findAll { it.name in groovyProjects }) {
+    buildscript {
+        dependencies {
+            //classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.0"
+        }
+    }
     apply plugin: 'groovy'
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'
     apply plugin: 'jacoco'
 
+    apply plugin: IShallBeReleasedPlugin
+
     apply plugin: 'maven-publish'
     //apply plugin: 'com.jfrog.bintray'
     //apply plugin: 'com.jfrog.artifactory'
-    apply plugin: IShallBeReleasedPlugin
 
     sourceCompatibility = 1.8
 
@@ -40,36 +46,30 @@ configure(subprojects.findAll { it.name in groovyProjects }) {
         }
     }
 
+
     tasks.whenTaskAdded { task ->
         if (task.name.equals('generatePomFileForMavenPublication')) {
             task.dependsOn(IShallBeReleasedPlugin.CONFIGURE_POM_TASK_NAME)
         }
     }
 
-    /*
-    task releasemeDetails(dependsOn: [IShallBeReleasedPlugin.DETERMINE_MAVEN_VERSION_TASK_NAME,
-                                      IShallBeReleasedPlugin.CONFIGURE_POM_TASK_NAME,
-                                      IShallBeReleasedPlugin.GENERATE_PROJECT_INFO_TASK_NAME]) {
-        print releaseme
-    }
-    */
-
-    /*
-    artifactory {
-        contextUrl = 'https://oss.jfrog.org/artifactory/'
-        publish {
-            repository {
-                repoKey = 'oss-snapshot-local'
-                username = rootProject.ext.secrets.bintrayUser
-                password = rootProject.ext.secrets.bintrayKey
-            }
-            defaults {
-                publications('maven')
+    if (project.plugins.hasPlugin('com.jfrog.artifactory')) {
+        artifactory {
+            contextUrl = 'https://oss.jfrog.org/artifactory/'
+            publish {
+                repository {
+                    repoKey = 'oss-snapshot-local'
+                    username = rootProject.ext.secrets.bintrayUser
+                    password = rootProject.ext.secrets.bintrayKey
+                }
+                defaults {
+                    publications('maven')
+                }
             }
         }
     }
 
-
+/*
     bintray {
         user = rootProject.ext.secrets.bintrayUser
         key = rootProject.ext.secrets.bintrayKey
@@ -120,6 +120,35 @@ project(':pomes-cli') {
 
     releaseme {
         githubRelease = true
+    }
+
+    task createDistributionDocs(dependsOn: IShallBeReleasedPlugin.GENERATE_PROJECT_INFO_TASK_NAME) {
+        def docs = file("$buildDir/distributionDocs")
+        outputs.dir docs
+        doLast {
+            docs.mkdirs()
+            Reader reader = releaseme.gitHub.renderMarkdown(file("$project.rootDir/README.md").text)
+            new File(docs, "project.yaml").write(releaseme.projectInfo.toYaml())
+            new File(docs, "README.HTML").write(reader.text)
+        }
+    }
+
+    distributions {
+        main {
+            contents {
+                from {
+                    ["$project.rootDir/LICENSE",
+                    "$project.rootDir/README.md"]
+                }
+                from(createDistributionDocs)
+            }
+        }
+    }
+
+    tasks.whenTaskAdded { task ->
+        if (task.name.equals('assembleDist')) {
+            task.dependsOn(IShallBeReleasedPlugin.GENERATE_PROJECT_INFO_TASK_NAME)
+        }
     }
 
     dependencies {
