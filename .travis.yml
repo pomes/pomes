@@ -16,3 +16,5 @@ before_install:
   - mvn install:install-file -Dfile=libs/github-api-1.77-SNAPSHOT/github-api-1.77-SNAPSHOT.jar -DpomFile=libs/github-api-1.77-SNAPSHOT/pom.xml -DgroupId=org.kohsuke -DartifactId=github-api -Dversion=1.77-SNAPSHOT -Dpackaging=jar
 
 install: ./gradlew assemble --stacktrace
+
+after_success: ./gradlew artifactoryPublish
