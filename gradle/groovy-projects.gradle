@@ -1,21 +1,12 @@
 import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
 
 configure(subprojects.findAll { it.name in groovyProjects }) {
-    buildscript {
-        dependencies {
-            //classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.0"
-        }
-    }
     apply plugin: 'groovy'
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'
     apply plugin: 'jacoco'
 
     apply plugin: IShallBeReleasedPlugin
-
-    apply plugin: 'maven-publish'
-    //apply plugin: 'com.jfrog.bintray'
-    //apply plugin: 'com.jfrog.artifactory'
 
     sourceCompatibility = 1.8
 
@@ -24,8 +15,6 @@ configure(subprojects.findAll { it.name in groovyProjects }) {
         testCompile "org.spockframework:spock-core:$spockVersion"
     }
 
-    apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
-
     releaseme {
         releaseProject = true
         bintrayRelease = true
@@ -33,7 +22,8 @@ configure(subprojects.findAll { it.name in groovyProjects }) {
 
     publishing {
         publications {
-            maven(MavenPublication) {
+            mavenLibrary(MavenPublication) {
+                from components.java
                 artifact tasks.groovydocJar
                 artifact tasks.sourcesJar
                 version IShallBeReleasedPlugin.determineMavenVersion(project.version)
@@ -46,43 +36,18 @@ configure(subprojects.findAll { it.name in groovyProjects }) {
         }
     }
 
+    artifactoryPublish {
+        publications('mavenLibrary')
+    }
 
     tasks.whenTaskAdded { task ->
-        if (task.name.equals('generatePomFileForMavenPublication')) {
+        if (task.name.equals('generatePomFileForMavenLibraryPublication')) {
             task.dependsOn(IShallBeReleasedPlugin.CONFIGURE_POM_TASK_NAME)
         }
     }
-
-    if (project.plugins.hasPlugin('com.jfrog.artifactory')) {
-        artifactory {
-            contextUrl = 'https://oss.jfrog.org/artifactory/'
-            publish {
-                repository {
-                    repoKey = 'oss-snapshot-local'
-                    username = rootProject.ext.secrets.bintrayUser
-                    password = rootProject.ext.secrets.bintrayKey
-                }
-                defaults {
-                    publications('maven')
-                }
-            }
-        }
-    }
-
-/*
-    bintray {
-        user = rootProject.ext.secrets.bintrayUser
-        key = rootProject.ext.secrets.bintrayKey
-        pkg {
-            repo = 'pomes'
-            userOrg = 'pomes'
-            //issueTrackerUrl = project.ext.basePom.issueManagement[0].url[0].value()
-            labels = ['maven', 'aether', 'groovy']
-        }
-    }
-    */
-
 }
+
+apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
 
 project(':pomes-core') {
     description = 'Core library for Pomes'
@@ -138,7 +103,7 @@ project(':pomes-cli') {
             contents {
                 from {
                     ["$project.rootDir/LICENSE",
-                    "$project.rootDir/README.md"]
+                     "$project.rootDir/README.md"]
                 }
                 from(createDistributionDocs)
             }

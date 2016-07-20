@@ -2,6 +2,10 @@ buildscript {
     repositories {
         jcenter()
     }
+    dependencies {
+        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7'
+    }
 }
 
 plugins {
@@ -14,6 +18,9 @@ allprojects {
     repositories {
         jcenter()
     }
+    apply plugin: 'com.jfrog.artifactory'
+    apply plugin: 'maven-publish'
+    apply plugin: 'com.jfrog.bintray'
 }
 
 ext {
@@ -26,6 +33,27 @@ wrapper.gradleVersion = gradleVersion
 buildScan {
     licenseAgreementUrl = 'https://gradle.com/terms-of-service'
     licenseAgree = 'yes'
+}
+
+artifactory {
+    contextUrl = 'https://oss.jfrog.org/artifactory/'
+    publish {
+        repository {
+            repoKey = 'oss-snapshot-local'
+            username = rootProject.ext.secrets.bintrayUser
+            password = rootProject.ext.secrets.bintrayKey
+        }
+    }
+}
+
+bintray {
+    user = rootProject.ext.secrets.bintrayUser
+    key = rootProject.ext.secrets.bintrayKey
+    pkg {
+        repo = 'pomes'
+        userOrg = 'pomes'
+        labels = ['maven', 'aether', 'groovy']
+    }
 }
 
 apply from: "$rootProject.projectDir/gradle/groovy-projects.gradle"

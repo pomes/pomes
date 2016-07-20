@@ -1,22 +1,23 @@
-apply plugin: 'codenarc'
-codenarc {
-    toolVersion = "$codeNarcVersion"
+if (project.plugins.hasPlugin('groovy')) {
+    apply plugin: 'codenarc'
+    codenarc {
+        toolVersion = "$codeNarcVersion"
 
-    codenarcMain {
-        configFile file("$rootProject.projectDir/config/codenarc/ruleset.groovy")
-        exclude "**/package-info.*"
-        ignoreFailures true
-        maxPriority1Violations 0
-        maxPriority2Violations 10
-        maxPriority3Violations 20
-    }
+        codenarcMain {
+            configFile file("$rootProject.projectDir/config/codenarc/ruleset.groovy")
+            exclude "**/package-info.*"
+            ignoreFailures true
+            maxPriority1Violations 0
+            maxPriority2Violations 10
+            maxPriority3Violations 20
+        }
 
-    codenarcTest {
-        ignoreFailures true
-        configFile file("$rootProject.projectDir/config/codenarc/ruleset-test.groovy")
-        maxPriority1Violations 0
-        maxPriority2Violations 10
-        maxPriority3Violations 20
+        codenarcTest {
+            ignoreFailures true
+            configFile file("$rootProject.projectDir/config/codenarc/ruleset-test.groovy")
+            maxPriority1Violations 0
+            maxPriority2Violations 10
+            maxPriority3Violations 20
+        }
     }
 }
-
