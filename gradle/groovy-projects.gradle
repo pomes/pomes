@@ -1,12 +1,17 @@
+import com.github.pomes.gradle.distdocs.DistDocsPlugin
+import com.github.pomes.gradle.projectinfo.ProjectInfoPlugin
 import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
 
-configure(subprojects.findAll { it.name in groovyProjects }) {
-    apply plugin: 'groovy'
+import static org.gradle.api.plugins.BasePlugin.BUILD_GROUP
+import static org.gradle.api.plugins.JavaBasePlugin.CHECK_TASK_NAME
+
+configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'
     apply plugin: 'jacoco'
-
-    apply plugin: IShallBeReleasedPlugin
+    apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
+    apply plugin: DistDocsPlugin
+    apply plugin: ProjectInfoPlugin
 
     sourceCompatibility = 1.8
 
@@ -14,6 +19,8 @@ configure(subprojects.findAll { it.name in groovyProjects }) {
         compile "org.codehaus.groovy:groovy-all:$groovyVersion"
         testCompile "org.spockframework:spock-core:$spockVersion"
     }
+
+    project.version = project.rootProject.version
 
     releaseme {
         releaseProject = true
@@ -26,9 +33,9 @@ configure(subprojects.findAll { it.name in groovyProjects }) {
                 from components.java
                 artifact tasks.groovydocJar
                 artifact tasks.sourcesJar
-                version IShallBeReleasedPlugin.determineMavenVersion(project.version)
+                version ProjectInfoPlugin.determineMavenVersion(project.version)
                 pom.withXml {
-                    releaseme.pom.each { n ->
+                    project.ext.pom.each { n ->
                         asNode().append n
                     }
                 }
@@ -42,12 +49,10 @@ configure(subprojects.findAll { it.name in groovyProjects }) {
 
     tasks.whenTaskAdded { task ->
         if (task.name.equals('generatePomFileForMavenLibraryPublication')) {
-            task.dependsOn(IShallBeReleasedPlugin.CONFIGURE_POM_TASK_NAME)
+            task.dependsOn(ProjectInfoPlugin.CONFIGURE_POM_TASK_NAME)
         }
     }
 }
-
-apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
 
 project(':pomes-core') {
     description = 'Core library for Pomes'
@@ -83,17 +88,24 @@ project(':pomes-cli') {
     apply plugin: 'application'
     mainClassName = 'com.github.pomes.cli.App'
 
+    dependencies {
+        compile project(':pomes-core')
+        compile 'com.beust:jcommander:1.48'
+        compile dependencyLogging
+        compile 'org.yaml:snakeyaml:1.17'
+    }
+
     releaseme {
         githubRelease = true
     }
 
-    task createDistributionDocs(dependsOn: IShallBeReleasedPlugin.GENERATE_PROJECT_INFO_TASK_NAME) {
+    task createDistributionDocs(dependsOn: ProjectInfoPlugin.GENERATE_PROJECT_INFO_TASK_NAME) {
         def docs = file("$buildDir/distributionDocs")
         outputs.dir docs
         doLast {
             docs.mkdirs()
             Reader reader = releaseme.gitHub.renderMarkdown(file("$project.rootDir/README.md").text)
-            new File(docs, "project.yaml").write(releaseme.projectInfo.toYaml())
+            new File(docs, "project.yaml").write(project.ext.projectInfo.toYaml())
             new File(docs, "README.HTML").write(reader.text)
         }
     }
@@ -112,25 +124,21 @@ project(':pomes-cli') {
 
     tasks.whenTaskAdded { task ->
         if (task.name.equals('assembleDist')) {
-            task.dependsOn(IShallBeReleasedPlugin.GENERATE_PROJECT_INFO_TASK_NAME)
+            task.dependsOn(ProjectInfoPlugin.GENERATE_PROJECT_INFO_TASK_NAME)
         }
     }
 
-    dependencies {
-        compile project(':pomes-core')
-        compile 'com.beust:jcommander:1.48'
-        compile dependencyLogging
-        compile 'org.yaml:snakeyaml:1.17'
-    }
+    rootProject.tasks.getByName(IShallBeReleasedPlugin.CHECK_RELEASE_STATUS_TASK_NAME)
+            .dependsOn(project.tasks.getByPath(BUILD_GROUP), project.tasks.getByPath(CHECK_TASK_NAME))
 
-    task updateVersion(dependsOn: IShallBeReleasedPlugin.CONFIGURE_VERSION_FILE_TASK_NAME) {
+    task updateVersion() {
         description 'Updates the Version.properties file'
         File versionPropFile = file('src/main/resources/com/github/pomes/cli/Version.properties')
-        File versionFile = project.rootProject.file('VERSION')
         outputs.file versionPropFile
-        inputs.file versionFile
+        //File versionFile = project.rootProject.file('VERSION')
+        //inputs.file versionFile
         doLast {
-            versionPropFile.text = "version=${versionFile.text}"
+            versionPropFile.text = "version=${project.version}"
         }
     }
     compileGroovy.dependsOn updateVersion

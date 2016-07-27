@@ -14,28 +14,13 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.gradle.releaseme
+package com.github.pomes.gradle.projectinfo
 
-import com.github.pomes.gradle.projectinfo.project.ProjectInfo
-import groovy.transform.ToString
-import groovy.util.logging.Slf4j
-import org.kohsuke.github.GitHub
+import groovy.transform.PackageScope
+import org.gradle.api.Project
 
-import static com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin.DEFAULT_RELEASE_TAG_PREFIX
+class ProjectInfoExtension {
 
-@Slf4j
-@ToString(includeNames = true)
-class IShallBeReleasedExtension {
-
-    String remote = 'origin'
-
-    String releaseTagPrefix = DEFAULT_RELEASE_TAG_PREFIX
-
-    Boolean releaseProject = false
-
-    Boolean githubRelease = false
-
-    Boolean bintrayRelease = false
-
-    GitHub gitHub = null
+    //@PackageScope
+    //Project project
 }

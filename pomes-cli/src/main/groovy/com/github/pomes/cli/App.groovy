@@ -62,7 +62,6 @@ class App {
     String getCommand() { jc.parsedCommand }
 
     void configure(String... args) {
-        parse args
         configuration = new Configuration(settings: settings, logging: logging)
         configuration.configure()
         jc = new JCommander(this)
@@ -70,28 +69,31 @@ class App {
         CliCommands.values().each { cmd ->
             jc.addCommand cmd.command
         }
+        parse args
     }
 
     Boolean parse(String... args) {
         try {
             jc.parse(args)
-            return true
         } catch (MissingCommandException mce) {
-            handleError new Node(null, NODE_ERROR, [message: bundle.getString('error.missingCommand', args)], mce)
+            handleError new Node(null, NODE_ERROR, [message: bundle.getString('error.missingCommand', args)])
             return false
         } catch (ParameterException pe) {
-            handleError new Node(null, NODE_ERROR, [message: bundle.getString('error.parameterException', args)], pe)
+            handleError new Node(null, NODE_ERROR, [message: bundle.getString('error.parameterException', pe.message)])
+            return false
+        } catch (any) {
+            handleError new Node(null, NODE_ERROR, [message: bundle.getString('error.unhandledException', args)], any)
             return false
         }
+        return true
     }
 
     Node handleRequest() {
         Node response = new Node(null, NODE_RESPONSE)
 
         if (version) {
-            response.append
-            new Node(NODE_VERSION, [name   : programName,
-                                    version: programVersion])
+            new Node(response, NODE_VERSION, [name   : programName,
+                                              version: programVersion])
             return response
         }
 
@@ -129,7 +131,7 @@ class App {
         }
 
         log.error "${error.@message}. ${details}"
-        println error.value().class
+
         if (error.value()?.class in Exception) {
             throw error.value()
         } else {

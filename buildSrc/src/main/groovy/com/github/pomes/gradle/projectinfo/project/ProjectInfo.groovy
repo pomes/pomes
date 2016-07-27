@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.github.pomes.gradle.releaseme.project
+package com.github.pomes.gradle.projectinfo.project
 
 import groovy.transform.Canonical
 
@@ -38,16 +38,16 @@ class ProjectInfo {
         writer << "  url: $url\n"
         writer << "  inceptionYear: $inceptionYear\n"
         writer << "  scm:\n"
-        scm.toYaml(writer)
+        scm?.toYaml(writer)
         writer << "  licenses: \n"
-        licenses.each {lic ->
+        licenses?.each {lic ->
             writer << "    - \n"
             lic.toYaml(writer, ' '*5)
         }
         writer << "  issueManagement: \n"
-        issueManagement.toYaml(writer)
+        issueManagement?.toYaml(writer)
         writer << "  ciManagement: \n"
-        ciManagement.toYaml(writer)
+        ciManagement?.toYaml(writer)
     }
 
     String toYaml() {

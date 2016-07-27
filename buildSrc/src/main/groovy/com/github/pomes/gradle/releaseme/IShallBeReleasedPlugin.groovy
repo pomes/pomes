@@ -15,7 +15,6 @@
  */
 package com.github.pomes.gradle.releaseme
 
-import com.github.pomes.gradle.releaseme.project.*
 import groovy.util.logging.Slf4j
 import org.ajoberstar.grgit.Grgit
 import org.ajoberstar.grgit.Status
@@ -25,8 +24,6 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.plugins.GroovyPlugin
-import org.gradle.api.tasks.bundling.Jar
 import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHub
 import org.kohsuke.github.HttpConnector
@@ -34,14 +31,6 @@ import org.kohsuke.github.extras.PreviewHttpConnector
 
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.time.Year
-import java.time.ZoneId
-
-import static org.gradle.api.plugins.BasePlugin.BUILD_GROUP
-import static org.gradle.api.plugins.GroovyPlugin.GROOVYDOC_TASK_NAME
-import static org.gradle.api.plugins.JavaBasePlugin.CHECK_TASK_NAME
-import static org.gradle.api.plugins.JavaPlugin.CLASSES_TASK_NAME
-import static org.gradle.api.plugins.JavaPlugin.TEST_CLASSES_TASK_NAME
 
 @Slf4j
 class IShallBeReleasedPlugin implements Plugin<Project> {
@@ -50,13 +39,9 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
     //Tasks:
     static final String DETERMINE_VERSION_TASK_NAME = 'determineCurrentVersion'
     static final String DISPLAY_VERSION_TASK_NAME = 'displayCurrentVersion'
-    static final String GENERATE_PROJECT_INFO_TASK_NAME = 'generateProjectInfo'
-    static final String DISPLAY_PROJECT_INFO_TASK_NAME = 'displayProjectInfo'
     static final String CHECK_RELEASE_STATUS_TASK_NAME = 'checkReleaseStatus'
     static final String PERFORM_RELEASE_TASK_NAME = 'performRelease'
     static final String CONFIGURE_VERSION_FILE_TASK_NAME = 'configureVersionFile'
-    static final String CONFIGURE_POM_TASK_NAME = 'configurePom'
-    //static final String RELEASE_ME_PROPERTIES_TASK_NAME = 'releaseMeProperties'
 
     static final String DEFAULT_RELEASE_TAG_PREFIX = 'version'
 
@@ -97,7 +82,6 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         }
         log.debug "GitHub project: $ghProject"
 
-
         try {
             extension.gitHub = GitHub.connect()
         } catch (IOException ex) {
@@ -112,55 +96,22 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         }
 
         project.version = determineCurrentVersion(localGit)
-
+        project.ext.ghRepo = ghRepo
         configureTasks(project, extension)
     }
 
     private void configureTasks(final Project project, final IShallBeReleasedExtension extension) {
-
         addDetermineVersionTask(project, extension)
-        addConfigureVersionFileTask(project, extension)
         addDisplayVersionTask(project, extension)
-
+        addConfigureVersionFileTask(project, extension)
         addCheckReleaseStatusTask(project, extension)
         addPerformReleaseTask(project, extension)
-
-        addGenerateProjectInfoTask(project, extension)
-        addDisplayProjectInfoTask(project, extension)
-        addConfigurePomTask(project, extension)
-
-        if (project.plugins.hasPlugin(GroovyPlugin)) {
-            addJarTasks(project, extension)
-        }
-    }
-
-    private void addJarTasks(Project project, IShallBeReleasedExtension extension) {
-        project.tasks.create(name: 'sourcesJar',
-                type: Jar,
-                dependsOn: CLASSES_TASK_NAME) {
-            classifier = 'sources'
-            from project.sourceSets.main.allSource
-        }
-        project.tasks.create(name: 'testSourcesJar',
-                type: Jar,
-                dependsOn: TEST_CLASSES_TASK_NAME) {
-            classifier = 'test-sources'
-            from project.sourceSets.test.allSource
-        }
-        project.tasks.create(name: 'groovydocJar',
-                type: Jar,
-                group: 'documentation',
-                dependsOn: GROOVYDOC_TASK_NAME) {
-            classifier = 'groovydoc'
-            from project.groovydoc.destinationDir
-        }
     }
 
     private void addCheckReleaseStatusTask(Project project, IShallBeReleasedExtension extension) {
         project.tasks.create(CHECK_RELEASE_STATUS_TASK_NAME) {
             group = 'release'
             description = 'Checks if there are any items preventing a release.'
-            dependsOn GENERATE_PROJECT_INFO_TASK_NAME, BUILD_GROUP, CHECK_TASK_NAME
             doLast {
                 Status status = localGit.status()
                 Boolean flag = false
@@ -196,8 +147,24 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         project.tasks.create(PERFORM_RELEASE_TASK_NAME) {
             group = 'release'
             description = 'Performs the release.'
-            dependsOn CHECK_RELEASE_STATUS_TASK_NAME
+            //dependsOn CHECK_RELEASE_STATUS_TASK_NAME
             doLast {
+                //Change the version to drop the SNAPSHOT
+                project.version = determineNextReleaseVersion(project.version)
+                println "Set the project version to $project.version"
+
+                String tag = "${DEFAULT_RELEASE_TAG_PREFIX}-${project.version}"
+                println "Releasing $tag"
+                //Call the configureVersionFile task
+                //project.tasks.getByPath(CONFIGURE_VERSION_FILE_TASK_NAME).
+
+                //Commit the changes
+                //def commit = localGit.commit(message: "Preparing version ${project.version} release", all: true)
+                //Tag the repository
+                //localGit.add.tag(name: tag, pointsTo: commit)
+
+                //Move the project to the next snapshot version
+                //project.version = determineNextReleaseVersion(project.version)
 
             }
         }
@@ -233,35 +200,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             description = 'Displays the current version.'
             dependsOn DETERMINE_VERSION_TASK_NAME
             doLast {
-                println "You are working on version ${project.version} and the next release version is ${nextReleaseVersion}"
-            }
-        }
-    }
-
-    private void addGenerateProjectInfoTask(Project project, IShallBeReleasedExtension extension) {
-        project.tasks.create(GENERATE_PROJECT_INFO_TASK_NAME) {
-            group = 'release'
-            description = 'Gathers together various project details.'
-            dependsOn DETERMINE_VERSION_TASK_NAME
-            doLast {
-                if (!extension.projectInfo) {
-                    extension.projectInfo = generateProjectInfo(project, ghRepo)
-                }
-            }
-        }
-    }
-
-    private void addDisplayProjectInfoTask(Project project, IShallBeReleasedExtension extension) {
-        project.tasks.create(DISPLAY_PROJECT_INFO_TASK_NAME) {
-            group = 'release'
-            description = 'Displays project details.'
-            dependsOn GENERATE_PROJECT_INFO_TASK_NAME
-            doLast {
-                if (extension.projectInfo) {
-                    println extension.projectInfo.toYaml()
-                } else {
-                    throw new GradleException("Task relies on $GENERATE_PROJECT_INFO_TASK_NAME")
-                }
+                println "[$project.name] You are working on version ${project.version} and the next release version is ${nextReleaseVersion}"
             }
         }
     }
@@ -282,76 +221,9 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         snapshot ? "$currentVersion-${Snapshot.SNAPSHOT}" : "$currentVersion"
     }
 
-    static String determineMavenVersion(String version) {
-        List<String> components = version.tokenize('-')
-        String versionNumber = components.head()
-        String postfix = components.size() > 1 ? "-${components.last()}" : ''
-        "$versionNumber.0.0$postfix".toString()
-    }
-
     static String determineNextReleaseVersion(String currentVersion,
                                               String releaseTagPrefix = DEFAULT_RELEASE_TAG_PREFIX) {
         "$currentVersion".endsWith("$Snapshot.SNAPSHOT") ? "$currentVersion" - "-$Snapshot.SNAPSHOT" : "$releaseTagPrefix-${currentVersion.tokenize('-')[1] + 1}"
-    }
-
-    static ProjectInfo generateProjectInfo(Project project, GHRepository ghRepo) {
-        new ProjectInfo(
-                name: project.name,
-                version: project.version,
-                description: project.description ?: ghRepo.description,
-                url: ghRepo.homepage.toURL(),
-                inceptionYear: new Year(ghRepo.createdAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().year),
-                scm: [system             : 'git',
-                      url                : ghRepo.gitHttpTransportUrl().toURL(),
-                      connection         : "scm:git:${ghRepo.gitHttpTransportUrl()}",
-                      developerConnection: "scm:git:${ghRepo.gitHttpTransportUrl()}"] as Scm,
-                licenses: [[name: ghRepo.license.name, url: ghRepo.license.url] as License],
-                issueManagement: [system: 'GitHub', url: "${ghRepo.htmlUrl}/issues".toURL()] as IssueManagement,
-                ciManagement: [system: 'TravisCI', url: "https://travis-ci.org/${ghRepo.fullName}".toURL()] as CiManagement
-        )
-    }
-
-    private void addConfigurePomTask(Project project, IShallBeReleasedExtension extension) {
-        project.tasks.create(CONFIGURE_POM_TASK_NAME) {
-            group = 'release'
-            description = 'Configures project\'s POM'
-            dependsOn GENERATE_PROJECT_INFO_TASK_NAME
-            doLast {
-                if (!extension.pom) {
-                    extension.pom = generatePomNodes(extension.projectInfo)
-                }
-            }
-        }
-    }
-
-    Node generatePomNodes(ProjectInfo info) {
-        new NodeBuilder().pom {
-            name info.name
-            description info.description
-            url info.url
-            inceptionYear info.inceptionYear
-            scm {
-                url info.scm.url
-                connection info.scm.connection
-                developerConnection info.scm.developerConnection
-            }
-            licenses {
-                info.licenses.each { License lic ->
-                    license {
-                        name lic.name
-                        url lic.url
-                    }
-                }
-            }
-            issueManagement {
-                system info.issueManagement.system
-                url info.issueManagement.url
-            }
-            ciManagement {
-                system info.ciManagement.system
-                url info.ciManagement.url
-            }
-        }
     }
 
     /*GHRelease performGithubRelease(String repoName, String tag) {

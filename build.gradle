@@ -1,3 +1,5 @@
+import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
+
 buildscript {
     repositories {
         jcenter()
@@ -13,6 +15,13 @@ plugins {
     id 'eclipse'
     id 'com.gradle.build-scan' version '1.0'
 }
+apply plugin: IShallBeReleasedPlugin
+
+ext {
+    secrets = getSecrets()
+}
+
+wrapper.gradleVersion = gradleVersion
 
 allprojects {
     repositories {
@@ -23,12 +32,10 @@ allprojects {
     apply plugin: 'com.jfrog.bintray'
 }
 
-ext {
-    secrets = getSecrets()
-    groovyProjects = ['pomes-core', 'pomes-cli', 'pomes-util']
+subprojects {
+    apply plugin: 'groovy'
 }
-
-wrapper.gradleVersion = gradleVersion
+apply from: "$rootProject.projectDir/gradle/groovy-projects.gradle"
 
 buildScan {
     licenseAgreementUrl = 'https://gradle.com/terms-of-service'
@@ -55,8 +62,6 @@ bintray {
         labels = ['maven', 'aether', 'groovy']
     }
 }
-
-apply from: "$rootProject.projectDir/gradle/groovy-projects.gradle"
 
 Properties getSecrets() {
     def props = new Properties()
