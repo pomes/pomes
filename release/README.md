@@ -2,7 +2,7 @@
 
 This directory contains the release notes - a doc for each release.
 
-Each release is tagged as `v#` (with # being the release number) - this matches the filenames
+Each release is tagged as `version-#` (with # being the release number) - this matches the filenames
 in this directory.
 
 I'm only using single release numbers and not [semantic numbering scheme](http://semver.org/).
