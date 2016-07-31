@@ -53,8 +53,6 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
 
     HttpConnector ghConnector = new PreviewHttpConnector()
 
-    String nextReleaseVersion
-
     IShallBeReleasedExtension extension
 
     @Override
@@ -96,12 +94,17 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         }
 
         project.version = determineCurrentVersion(localGit)
+        project.subprojects.each { sub ->
+            sub.version = project.version
+        }
+
         project.ext.ghRepo = ghRepo
         configureTasks(project, extension)
     }
 
     private void configureTasks(final Project project, final IShallBeReleasedExtension extension) {
         addDetermineVersionTask(project, extension)
+
         addDisplayVersionTask(project, extension)
         addConfigureVersionFileTask(project, extension)
         addCheckReleaseStatusTask(project, extension)
@@ -144,28 +147,34 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
     }
 
     private void addPerformReleaseTask(Project project, IShallBeReleasedExtension extension) {
+
+        project.tasks.create('_prepareReleaseVersion') {
+            doLast {
+                //Change the version to drop the SNAPSHOT
+                project.version = determineNextReleaseVersion(project.version)
+                project.subprojects.each { sub ->
+                    sub.version = project.version
+                }
+                println "Set the project version to $project.version"
+            }
+        }
+
         project.tasks.create(PERFORM_RELEASE_TASK_NAME) {
             group = 'release'
             description = 'Performs the release.'
             //dependsOn CHECK_RELEASE_STATUS_TASK_NAME
+            dependsOn '_prepareReleaseVersion', CONFIGURE_VERSION_FILE_TASK_NAME
             doLast {
-                //Change the version to drop the SNAPSHOT
-                project.version = determineNextReleaseVersion(project.version)
-                println "Set the project version to $project.version"
-
                 String tag = "${DEFAULT_RELEASE_TAG_PREFIX}-${project.version}"
                 println "Releasing $tag"
-                //Call the configureVersionFile task
-                //project.tasks.getByPath(CONFIGURE_VERSION_FILE_TASK_NAME).
 
                 //Commit the changes
                 //def commit = localGit.commit(message: "Preparing version ${project.version} release", all: true)
                 //Tag the repository
-                //localGit.add.tag(name: tag, pointsTo: commit)
+                //localGit.tag.add(name: tag, pointsTo: commit)
 
                 //Move the project to the next snapshot version
                 //project.version = determineNextReleaseVersion(project.version)
-
             }
         }
     }
@@ -174,8 +183,11 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         project.tasks.create(DETERMINE_VERSION_TASK_NAME) {
             group = 'release'
             description = 'Determines the current version.'
-            doFirst {
-                nextReleaseVersion = determineNextReleaseVersion(project.version)
+            doLast {
+                project.version = determineCurrentVersion(localGit)
+                project.subprojects.each { sub ->
+                    sub.version = project.version
+                }
             }
         }
     }
@@ -185,8 +197,11 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         project.tasks.create(CONFIGURE_VERSION_FILE_TASK_NAME) {
             group = 'release'
             description = 'Adds a VERSION file to the project root'
-            outputs.file vFile
             dependsOn DETERMINE_VERSION_TASK_NAME
+            mustRunAfter DETERMINE_VERSION_TASK_NAME
+            onlyIf {
+                vFile.text != project.version
+            }
             doLast {
                 vFile.text = project.version
                 log.info "Configured version file: $vFile"
@@ -200,7 +215,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             description = 'Displays the current version.'
             dependsOn DETERMINE_VERSION_TASK_NAME
             doLast {
-                println "[$project.name] You are working on version ${project.version} and the next release version is ${nextReleaseVersion}"
+                println project.version
             }
         }
     }

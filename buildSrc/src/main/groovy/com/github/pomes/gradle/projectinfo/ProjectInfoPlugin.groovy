@@ -17,6 +17,7 @@
 package com.github.pomes.gradle.projectinfo
 
 import com.github.pomes.gradle.projectinfo.project.*
+import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -48,6 +49,9 @@ class ProjectInfoPlugin implements Plugin<Project> {
         project.tasks.create(GENERATE_PROJECT_INFO_TASK_NAME) {
             group = TASK_GROUP
             description = 'Gathers together various project details.'
+            if (project.rootProject.plugins.hasPlugin(IShallBeReleasedPlugin)) {
+                dependsOn project.rootProject.tasks.getByName(IShallBeReleasedPlugin.DETERMINE_VERSION_TASK_NAME)
+            }
             doLast {
                 if (!projectInfo) {
                     projectInfo = generateProjectInfo(project)

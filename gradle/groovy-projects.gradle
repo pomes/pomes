@@ -20,8 +20,6 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
         testCompile "org.spockframework:spock-core:$spockVersion"
     }
 
-    project.version = project.rootProject.version
-
     releaseme {
         releaseProject = true
         bintrayRelease = true
@@ -49,7 +47,7 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
 
     tasks.whenTaskAdded { task ->
         if (task.name.equals('generatePomFileForMavenLibraryPublication')) {
-            task.dependsOn(ProjectInfoPlugin.CONFIGURE_POM_TASK_NAME)
+            task.dependsOn ProjectInfoPlugin.CONFIGURE_POM_TASK_NAME
         }
     }
 }
@@ -133,12 +131,14 @@ project(':pomes-cli') {
 
     task updateVersion() {
         description 'Updates the Version.properties file'
+        dependsOn ":${IShallBeReleasedPlugin.CONFIGURE_VERSION_FILE_TASK_NAME}"
+        mustRunAfter ":${IShallBeReleasedPlugin.CONFIGURE_VERSION_FILE_TASK_NAME}"
         File versionPropFile = file('src/main/resources/com/github/pomes/cli/Version.properties')
         outputs.file versionPropFile
-        //File versionFile = project.rootProject.file('VERSION')
-        //inputs.file versionFile
+        File versionFile = project.rootProject.file('VERSION')
+        inputs.file versionFile
         doLast {
-            versionPropFile.text = "version=${project.version}"
+            versionPropFile.text = "version=${versionFile.text}"
         }
     }
     compileGroovy.dependsOn updateVersion
