@@ -31,7 +31,7 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
                 from components.java
                 artifact tasks.groovydocJar
                 artifact tasks.sourcesJar
-                version ProjectInfoPlugin.determineMavenVersion(project.version)
+                version ProjectInfoPlugin.determineMavenVersion(rootProject.file('VERSION').text)
                 pom.withXml {
                     project.ext.pom.each { n ->
                         asNode().append n
@@ -46,7 +46,7 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
     }
 
     tasks.whenTaskAdded { task ->
-        if (task.name.equals('generatePomFileForMavenLibraryPublication')) {
+        if (task.name == 'generatePomFileForMavenLibraryPublication') {
             task.dependsOn ProjectInfoPlugin.CONFIGURE_POM_TASK_NAME
         }
     }

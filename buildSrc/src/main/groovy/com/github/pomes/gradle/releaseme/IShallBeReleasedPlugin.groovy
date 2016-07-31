@@ -64,6 +64,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         } catch (RepositoryNotFoundException e) {
             throw new GradleException("Git repository not found at ${project.rootDir}")
         }
+        setVersion(project)
 
         ghConnection = localGit.remote.list().find { it.name == extension.remote }?.url
         log.debug "Remote GitHub connection: $ghConnection"
@@ -93,18 +94,12 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             throw new GradleException("Failed when trying to connect to GitHub project ($ghProject)")
         }
 
-        project.version = determineCurrentVersion(localGit)
-        project.subprojects.each { sub ->
-            sub.version = project.version
-        }
-
         project.ext.ghRepo = ghRepo
         configureTasks(project, extension)
     }
 
     private void configureTasks(final Project project, final IShallBeReleasedExtension extension) {
         addDetermineVersionTask(project, extension)
-
         addDisplayVersionTask(project, extension)
         addConfigureVersionFileTask(project, extension)
         addCheckReleaseStatusTask(project, extension)
@@ -162,7 +157,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         project.tasks.create(PERFORM_RELEASE_TASK_NAME) {
             group = 'release'
             description = 'Performs the release.'
-            //dependsOn CHECK_RELEASE_STATUS_TASK_NAME
+            dependsOn CHECK_RELEASE_STATUS_TASK_NAME
             dependsOn '_prepareReleaseVersion', CONFIGURE_VERSION_FILE_TASK_NAME
             doLast {
                 String tag = "${DEFAULT_RELEASE_TAG_PREFIX}-${project.version}"
@@ -183,12 +178,25 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         project.tasks.create(DETERMINE_VERSION_TASK_NAME) {
             group = 'release'
             description = 'Determines the current version.'
-            doLast {
-                project.version = determineCurrentVersion(localGit)
-                project.subprojects.each { sub ->
-                    sub.version = project.version
+            onlyIf {
+                if (project.ext.has('lastVersion')) {
+                    project.ext.lastVersion != determineCurrentVersion(localGit)
+                } else {
+                    true
                 }
             }
+            doLast {
+                setVersion(project)
+            }
+            finalizedBy CONFIGURE_VERSION_FILE_TASK_NAME
+        }
+    }
+
+    void setVersion(Project project) {
+        project.version = determineCurrentVersion(localGit)
+        project.ext.lastVersion = project.version
+        project.subprojects.each { sub ->
+            sub.version = project.version
         }
     }
 
@@ -198,10 +206,8 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             group = 'release'
             description = 'Adds a VERSION file to the project root'
             dependsOn DETERMINE_VERSION_TASK_NAME
-            mustRunAfter DETERMINE_VERSION_TASK_NAME
-            onlyIf {
-                vFile.text != project.version
-            }
+            //mustRunAfter DETERMINE_VERSION_TASK_NAME
+            inputs.file vFile
             doLast {
                 vFile.text = project.version
                 log.info "Configured version file: $vFile"

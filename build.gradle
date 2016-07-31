@@ -1,4 +1,5 @@
 import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
+import com.github.pomes.gradle.secrets.SecretsPlugin
 
 buildscript {
     repositories {
@@ -16,10 +17,7 @@ plugins {
     id 'com.gradle.build-scan' version '1.0'
 }
 apply plugin: IShallBeReleasedPlugin
-
-ext {
-    secrets = getSecrets()
-}
+apply plugin: SecretsPlugin
 
 wrapper.gradleVersion = gradleVersion
 
@@ -61,13 +59,4 @@ bintray {
         userOrg = 'pomes'
         labels = ['maven', 'aether', 'groovy']
     }
-}
-
-Properties getSecrets() {
-    def props = new Properties()
-
-    file("${rootDir.absolutePath}/secrets.properties").withInputStream { stream ->
-        props.load(stream)
-    }
-    return props
 }
