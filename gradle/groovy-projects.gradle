@@ -53,7 +53,7 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
 
     task preReleaseGroovyChecks() {
         group 'release'
-        dependsOn 'assemble', 'publish', 'artifactoryPublish'
+        dependsOn 'assemble'
     }
 
     rootProject.tasks.getByName('checkReleaseStatus').dependsOn preReleaseGroovyChecks
