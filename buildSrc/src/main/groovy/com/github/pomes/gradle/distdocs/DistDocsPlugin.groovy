@@ -18,14 +18,13 @@ package com.github.pomes.gradle.distdocs
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.bundling.Jar
-
 import org.gradle.api.plugins.GroovyPlugin
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.tasks.bundling.Jar
 
-import static org.gradle.api.plugins.GroovyPlugin.GROOVYDOC_TASK_NAME
 import static org.gradle.api.plugins.JavaPlugin.CLASSES_TASK_NAME
 import static org.gradle.api.plugins.JavaPlugin.TEST_CLASSES_TASK_NAME
+import static org.gradle.api.plugins.GroovyPlugin.GROOVYDOC_TASK_NAME
 
 class DistDocsPlugin implements Plugin<Project> {
     static final String EXTENSION_NAME = 'distdocs'
@@ -35,27 +34,29 @@ class DistDocsPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         if (project.plugins.hasPlugin(JavaPlugin)) {
-            project.tasks.create(name: 'sourcesJar',
-                    type: Jar,
-                    group: TASK_GROUP_SOURCES,
-                    dependsOn: CLASSES_TASK_NAME) {
-                classifier = 'sources'
+            project.tasks.create(name: 'sourcesJar', type: Jar) {
+                group TASK_GROUP_SOURCES
+                dependsOn CLASSES_TASK_NAME
+                inputs.sourceDir project.sourceSets.main.allSource
+                classifier 'sources'
                 from project.sourceSets.main.allSource
             }
-            project.tasks.create(name: 'testSourcesJar',
-                    type: Jar,
-                    group: TASK_GROUP_SOURCES,
-                    dependsOn: TEST_CLASSES_TASK_NAME) {
-                classifier = 'test-sources'
+
+            project.tasks.create(name: 'testSourcesJar', type: Jar) {
+                group TASK_GROUP_SOURCES
+                dependsOn TEST_CLASSES_TASK_NAME
+                classifier 'test-sources'
+                inputs.sourceDir project.sourceSets.test.allSource
                 from project.sourceSets.test.allSource
             }
         }
+
         if (project.plugins.hasPlugin(GroovyPlugin)) {
-            project.tasks.create(name: 'groovydocJar',
-                    type: Jar,
-                    group: TASK_GROUP_DOCUMENTATION,
-                    dependsOn: GROOVYDOC_TASK_NAME) {
-                classifier = 'groovydoc'
+            project.tasks.create(name: 'groovydocJar', type: Jar) {
+                group TASK_GROUP_DOCUMENTATION
+                dependsOn GROOVYDOC_TASK_NAME
+                classifier 'groovydoc'
+                inputs.sourceDir project.groovydoc.destinationDir
                 from project.groovydoc.destinationDir
             }
         }
