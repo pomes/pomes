@@ -221,8 +221,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             group = 'release'
             description = 'Adds a VERSION file to the project root'
             dependsOn DETERMINE_VERSION_TASK_NAME
-            //mustRunAfter DETERMINE_VERSION_TASK_NAME
-            inputs.file vFile
+            outputs.file vFile
             doLast {
                 vFile.text = project.version
                 log.info "Configured version file: $vFile"
