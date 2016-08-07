@@ -45,6 +45,20 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
         publications('mavenLibrary')
     }
 
+    project.tasks.getByName('publish').dependsOn ProjectInfoPlugin.GENERATE_PROJECT_INFO_TASK_NAME
+
+    bintray {
+        user = rootProject.ext.secrets.bintrayUser
+        key = rootProject.ext.secrets.bintrayKey
+        publications = ['mavenLibrary']
+        pkg {
+            userOrg = 'pomes'
+            repo = 'pomes'
+            name = project.name
+            labels = ['maven', 'aether', 'groovy']
+        }
+    }
+
     tasks.whenTaskAdded { task ->
         if (task.name == 'generatePomFileForMavenLibraryPublication') {
             task.dependsOn ProjectInfoPlugin.CONFIGURE_POM_TASK_NAME
@@ -57,6 +71,7 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
     }
 
     rootProject.tasks.getByName('checkReleaseStatus').dependsOn preReleaseGroovyChecks
+    rootProject.tasks.getByName('performRelease').finalizedBy 'artifactoryPublish', 'bintrayUpload'
 }
 
 project(':pomes-core') {

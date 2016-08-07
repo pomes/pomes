@@ -112,10 +112,13 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
                 Status status = localGit.status()
                 Boolean flag = false
                 List<String> errors = []
+
+                /*
                 if (!status.clean) {
                     errors << "The local git repository contains changes: Conflicts: ${status.conflicts.size()}; Staged: ${status.staged.allChanges.size()}; Unstaged: ${status.unstaged.allChanges.size()}"
                     flag = true
                 }
+                */
 
                 if (localGit.branch.current.name != ghRepo.defaultBranch) {
                     errors << "You don't currently appear to be on the default branch (${ghRepo.defaultBranch}) - time to merge (${localGit.branch.current.fullName})."
@@ -159,7 +162,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             description = 'Tags a release in git.'
             dependsOn '_prepareReleaseVersion'
             doLast {
-                localGit.commit(message: "Preparing version ${project.version} release", all: true)
+                localGit.commit(message: "Version ${project.version} release", all: true)
             }
         }
 
@@ -240,23 +243,30 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         }
     }
 
-    static String determineCurrentVersion(Grgit git) {
-        String currentVersion = '1'
-        Boolean snapshot = true
+    static Tag determineLastReleaseVersion(Grgit git) {
         List<Tag> tags = git.tag.list()
 
         if (tags) {
-            Tag latestVersionTag = tags.findAll { it.name.startsWith(DEFAULT_RELEASE_TAG_PREFIX) }
+            tags.findAll { it.name.startsWith(DEFAULT_RELEASE_TAG_PREFIX) }
                     .max { it.name - DEFAULT_RELEASE_TAG_PREFIX }
-            if (latestVersionTag) {
-                log.info "Latest version tag is $latestVersionTag.name"
-                if (latestVersionTag.commit.id == git.head().id && git.status().clean) {
-                    //Code is currently on a version tag
-                    currentVersion = latestVersionTag.name - DEFAULT_RELEASE_TAG_PREFIX
-                    snapshot = false
-                } else {
-                    currentVersion = (latestVersionTag.name - DEFAULT_RELEASE_TAG_PREFIX).toInteger() + 1
-                }
+        } else {
+            null
+        }
+    }
+
+    static String determineCurrentVersion(Grgit git) {
+        String currentVersion = '1'
+        Boolean snapshot = true
+        Tag latestVersionTag = determineLastReleaseVersion(git)
+
+        if (latestVersionTag) {
+            log.info "Latest version tag is $latestVersionTag.name"
+            if (latestVersionTag.commit.id == git.head().id && git.status().clean) {
+                //Code is currently on a version tag
+                currentVersion = latestVersionTag.name - DEFAULT_RELEASE_TAG_PREFIX
+                snapshot = false
+            } else {
+                currentVersion = (latestVersionTag.name - DEFAULT_RELEASE_TAG_PREFIX).toInteger() + 1
             }
         }
         log.info "Current version is $currentVersion"
