@@ -145,6 +145,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             group = 'release'
             description = 'Prepares any changes required prior to committing/tagging a release'
             dependsOn CHECK_RELEASE_STATUS_TASK_NAME
+            finalizedBy CONFIGURE_VERSION_FILE_TASK_NAME
             doLast {
                 //Change the version to drop the SNAPSHOT
                 project.version = determineNextReleaseVersion(project.version)
@@ -156,7 +157,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         project.tasks.create('_commitRelease') {
             group = 'release'
             description = 'Tags a release in git.'
-            dependsOn '_prepareReleaseVersion', CONFIGURE_VERSION_FILE_TASK_NAME
+            dependsOn '_prepareReleaseVersion'
             doLast {
                 localGit.commit(message: "Preparing version ${project.version} release", all: true)
             }

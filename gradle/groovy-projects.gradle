@@ -57,7 +57,6 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
     }
 
     rootProject.tasks.getByName('checkReleaseStatus').dependsOn preReleaseGroovyChecks
-    rootProject.tasks.getByName('_commitRelease').dependsOn compileGroovy
 }
 
 project(':pomes-core') {
@@ -147,5 +146,6 @@ project(':pomes-cli') {
             versionPropFile.text = "version=${versionFile.text}"
         }
     }
-    compileGroovy.dependsOn updateVersion
+    //compileGroovy.dependsOn updateVersion
+    rootProject.tasks.getByName('configureVersionFile').finalizedBy updateVersion
 }
