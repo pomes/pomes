@@ -2,6 +2,7 @@ import com.github.pomes.gradle.distdocs.DistDocsPlugin
 import com.github.pomes.gradle.projectinfo.ProjectInfoPlugin
 import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
 
+import static com.github.pomes.gradle.projectinfo.ProjectInfoPlugin.determineMavenVersion
 import static org.gradle.api.plugins.BasePlugin.BUILD_GROUP
 import static org.gradle.api.plugins.JavaBasePlugin.CHECK_TASK_NAME
 
@@ -56,6 +57,10 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
             repo = 'pomes'
             name = project.name
             labels = ['maven', 'aether', 'groovy']
+            version {
+                name = determineMavenVersion(project.version)
+                vcsTag = "${IShallBeReleasedPlugin.DEFAULT_RELEASE_TAG_PREFIX}${project.version}"
+            }
         }
     }
 
