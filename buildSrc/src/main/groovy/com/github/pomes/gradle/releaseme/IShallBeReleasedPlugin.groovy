@@ -143,8 +143,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
 
         project.tasks.create('_prepareReleaseVersion') {
             group = 'release'
-            description = 'Prepares any chnages required prior to committing/tagging a release'
-            dependsOn CHECK_RELEASE_STATUS_TASK_NAME
+            description = 'Prepares any changes required prior to committing/tagging a release'
             doLast {
                 //Change the version to drop the SNAPSHOT
                 project.version = determineNextReleaseVersion(project.version)
@@ -176,8 +175,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         project.tasks.create(PERFORM_RELEASE_TASK_NAME) {
             group = 'release'
             description = 'Performs the release.'
-            dependsOn CHECK_RELEASE_STATUS_TASK_NAME
-            dependsOn '_tagRelease'
+            dependsOn CHECK_RELEASE_STATUS_TASK_NAME, '_tagRelease'
             doLast {
             }
         }
