@@ -41,7 +41,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
     static final String PERFORM_RELEASE_TASK_NAME = 'performRelease'
     static final String CONFIGURE_VERSION_FILE_TASK_NAME = 'configureVersionFile'
 
-    static final String DEFAULT_RELEASE_TAG_PREFIX = 'version'
+    static final String DEFAULT_RELEASE_TAG_PREFIX = 'version-'
 
     Grgit localGit
 
@@ -60,10 +60,13 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         } catch (RepositoryNotFoundException e) {
             throw new GradleException("Git repository not found at ${project.rootDir}")
         }
-        setVersion(project)
+        if (!localGit) {
+            throw new GradleException('Failed to connect to the local Git repository.')
+        }
+        setVersion(project, localGit)
 
         ghConnection = localGit.remote.list().find { it.name == extension.remote }?.url
-        log.debug "Remote GitHub connection: $ghConnection"
+        log.info "Remote GitHub connection: $ghConnection"
 
         if (ghConnection.startsWith('git@github.com')) {
             ghProject = ghConnection.tokenize(':')[1] - '.git'
@@ -139,13 +142,34 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
     private void addPerformReleaseTask(Project project, IShallBeReleasedExtension extension) {
 
         project.tasks.create('_prepareReleaseVersion') {
+            group = 'release'
+            description = 'Prepares any chnages required prior to committing/tagging a release'
+            //dependsOn CHECK_RELEASE_STATUS_TASK_NAME
             doLast {
                 //Change the version to drop the SNAPSHOT
                 project.version = determineNextReleaseVersion(project.version)
-                project.subprojects.each { sub ->
-                    sub.version = project.version
-                }
+                setVersionForProject(project)
                 println "Set the project version to $project.version"
+            }
+        }
+
+        project.tasks.create('_commitRelease') {
+            group = 'release'
+            description = 'Tags a release in git.'
+            dependsOn '_prepareReleaseVersion', CONFIGURE_VERSION_FILE_TASK_NAME
+            doLast {
+                localGit.commit(message: "Preparing version ${project.version} release", all: true)
+            }
+        }
+
+        project.tasks.create('_tagRelease') {
+            group = 'release'
+            description = 'Tags a release in git.'
+            dependsOn '_commitRelease'
+            doLast {
+                String tag = "${DEFAULT_RELEASE_TAG_PREFIX}${project.version}"
+                println "Releasing $tag"
+                localGit.tag.add(name: tag)
             }
         }
 
@@ -155,16 +179,6 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             dependsOn CHECK_RELEASE_STATUS_TASK_NAME
             dependsOn '_prepareReleaseVersion', CONFIGURE_VERSION_FILE_TASK_NAME
             doLast {
-                String tag = "${DEFAULT_RELEASE_TAG_PREFIX}-${project.version}"
-                println "Releasing $tag"
-
-                //Commit the changes
-                //def commit = localGit.commit(message: "Preparing version ${project.version} release", all: true)
-                //Tag the repository
-                //localGit.tag.add(name: tag, pointsTo: commit)
-
-                //Move the project to the next snapshot version
-                //project.version = determineNextReleaseVersion(project.version)
             }
         }
     }
@@ -181,18 +195,24 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
                 }
             }
             doLast {
-                setVersion(project)
+                setVersion(project, localGit)
             }
             finalizedBy CONFIGURE_VERSION_FILE_TASK_NAME
         }
     }
 
-    void setVersion(Project project) {
-        project.version = determineCurrentVersion(localGit)
+    static void setVersion(Project project, Grgit git) {
+        project.version = determineCurrentVersion(git)
+        log.info "Project ($project.name) version set to $project.version"
         project.ext.lastVersion = project.version
+        setVersionForProject(project)
+    }
+
+    static void setVersionForProject(Project project) {
         project.subprojects.each { sub ->
             sub.version = project.version
         }
+        project.file("${project.rootDir}/VERSION").text = project.version
     }
 
     private void addConfigureVersionFileTask(Project project, IShallBeReleasedExtension extension) {
@@ -221,19 +241,27 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         }
     }
 
-    static String determineCurrentVersion(Grgit localGit) {
+    static String determineCurrentVersion(Grgit git) {
         String currentVersion = '1'
         Boolean snapshot = true
-        List<Tag> tags = localGit.tag.list()
+        List<Tag> tags = git.tag.list()
 
         if (tags) {
-            Tag latestVersionTag
-            List<Tag> versionTags = tags.findAll { it.fullName.startsWith(DEFAULT_RELEASE_TAG_PREFIX) }
-            latestVersionTag = versionTags.max { it.fullName }
-            if (latestVersionTag.commit.id == localGit.head().id) {
-                snapshot = false
+            Tag latestVersionTag = tags.findAll { it.name.startsWith(DEFAULT_RELEASE_TAG_PREFIX) }
+                    .max { it.name - DEFAULT_RELEASE_TAG_PREFIX }
+            if (latestVersionTag) {
+                log.info "Latest version tag is $latestVersionTag.name"
+                if (latestVersionTag.commit.id == git.head().id && git.status().clean) {
+                    //Code is currently on a version tag
+                    currentVersion = latestVersionTag.name - DEFAULT_RELEASE_TAG_PREFIX
+                    snapshot = false
+                } else {
+                    currentVersion = (latestVersionTag.name - DEFAULT_RELEASE_TAG_PREFIX).toInteger() + 1
+                }
             }
         }
+        log.info "Current version is $currentVersion"
+        log.info "Version is a snapshot: $snapshot"
         snapshot ? "$currentVersion-${Snapshot.SNAPSHOT}" : "$currentVersion"
     }
 
