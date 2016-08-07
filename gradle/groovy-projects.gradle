@@ -76,7 +76,9 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
     }
 
     rootProject.tasks.getByName('checkReleaseStatus').dependsOn preReleaseGroovyChecks
-    rootProject.tasks.getByName('performRelease').finalizedBy 'artifactoryPublish', 'bintrayUpload'
+
+    //This seems to not push the released version properly - need to manually run after(?)
+    //rootProject.tasks.getByName('performRelease').finalizedBy 'artifactoryPublish', 'bintrayUpload'
 }
 
 project(':pomes-core') {
