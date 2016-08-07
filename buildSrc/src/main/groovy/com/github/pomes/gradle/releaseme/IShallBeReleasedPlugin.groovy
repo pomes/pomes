@@ -177,7 +177,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
             group = 'release'
             description = 'Performs the release.'
             dependsOn CHECK_RELEASE_STATUS_TASK_NAME
-            dependsOn '_prepareReleaseVersion'
+            dependsOn '_tagRelease'
             doLast {
             }
         }
