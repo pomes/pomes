@@ -132,7 +132,6 @@ project(':pomes-cli') {
     task updateVersion() {
         description 'Updates the Version.properties file'
         dependsOn ":${IShallBeReleasedPlugin.CONFIGURE_VERSION_FILE_TASK_NAME}"
-        mustRunAfter ":${IShallBeReleasedPlugin.CONFIGURE_VERSION_FILE_TASK_NAME}"
         File versionPropFile = file('src/main/resources/com/github/pomes/cli/Version.properties')
         outputs.file versionPropFile
         File versionFile = project.rootProject.file('VERSION')

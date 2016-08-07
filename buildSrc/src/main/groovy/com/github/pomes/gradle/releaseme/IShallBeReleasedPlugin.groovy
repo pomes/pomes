@@ -144,12 +144,12 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         project.tasks.create('_prepareReleaseVersion') {
             group = 'release'
             description = 'Prepares any chnages required prior to committing/tagging a release'
-            //dependsOn CHECK_RELEASE_STATUS_TASK_NAME
+            dependsOn CHECK_RELEASE_STATUS_TASK_NAME
             doLast {
                 //Change the version to drop the SNAPSHOT
                 project.version = determineNextReleaseVersion(project.version)
                 setVersionForProject(project)
-                println "Set the project version to $project.version"
+                println "The project version is set to '$project.version' for the release"
             }
         }
 
