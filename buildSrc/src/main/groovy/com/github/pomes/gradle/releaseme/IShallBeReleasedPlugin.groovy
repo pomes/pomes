@@ -26,8 +26,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHub
-import org.kohsuke.github.HttpConnector
-import org.kohsuke.github.extras.PreviewHttpConnector
 
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -50,8 +48,6 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
     GHRepository ghRepo
 
     String ghConnection, ghProject
-
-    HttpConnector ghConnector = new PreviewHttpConnector()
 
     IShallBeReleasedExtension extension
 
@@ -86,7 +82,6 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         } catch (IOException ex) {
             throw new GradleException('Failed when trying to connect to GitHub')
         }
-        extension.gitHub.connector = ghConnector
 
         try {
             ghRepo = extension.gitHub.getRepository(ghProject)

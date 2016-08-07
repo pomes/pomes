@@ -4,9 +4,6 @@ plugins {
 
 repositories {
     jcenter()
-
-    //This is needed because you mvn install github-api locally
-    mavenLocal()
 }
 
 dependencies {
@@ -14,7 +11,7 @@ dependencies {
     compile "org.codehaus.groovy:groovy-all:2.4.4"
     compile 'org.ajoberstar:grgit:1.7.0'
 
-    compile 'org.kohsuke:github-api:1.77-SNAPSHOT'
+    compile 'org.kohsuke:github-api:1.77'
     compile 'commons-validator:commons-validator:1.5.1'
 }
 

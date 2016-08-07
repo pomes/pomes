@@ -16,7 +16,6 @@
 
 package com.github.pomes.gradle.releaseme
 
-import com.github.pomes.gradle.projectinfo.project.ProjectInfo
 import groovy.transform.ToString
 import groovy.util.logging.Slf4j
 import org.kohsuke.github.GitHub
