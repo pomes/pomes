@@ -50,6 +50,13 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
             task.dependsOn ProjectInfoPlugin.CONFIGURE_POM_TASK_NAME
         }
     }
+
+    task preReleaseGroovyChecks() {
+        group 'release'
+        dependsOn 'assemble', 'publish', 'artifactoryPublish'
+    }
+
+    rootProject.tasks.getByName('checkReleaseStatus').dependsOn preReleaseGroovyChecks
 }
 
 project(':pomes-core') {
@@ -141,4 +148,5 @@ project(':pomes-cli') {
         }
     }
     compileGroovy.dependsOn updateVersion
+    rootProject.tasks.getByName('_commitRelease').dependsOn updateVersion
 }
