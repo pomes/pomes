@@ -40,15 +40,5 @@ provides a description of this command.
 
 ## Building
 
-In order to build the project you'll need to install a copy of the `libs/github-api-1.77-SNAPSHOT` files (jar and pom)
-into your local Maven repository:
-
-        mvn install:install-file -Dfile=libs/github-api-1.77-SNAPSHOT/github-api-1.77-SNAPSHOT.jar \
-        -DpomFile=libs/github-api-1.77-SNAPSHOT/pom.xml \
-        -DgroupId=org.kohsuke -DartifactId=github-api -Dversion=1.77-SNAPSHOT -Dpackaging=jar
-
-This is a fork of the main Github-API project and the source is available at https://github.com/pomes/github-api. 
-I have a pull request for the changes at https://github.com/kohsuke/github-api/pull/284.
-
-You'll also need to create a `~/.github` file in your local directory so that the `releaseme` plugin can perform
-its magic. See the "Credentials" section in http://github-api.kohsuke.org/ for more information.
+You'll need to create a `~/.github` file in your local directory so that the `releaseme` plugin can perform
+its magic. See the "Credentials" section in <http://github-api.kohsuke.org/> for more information.
