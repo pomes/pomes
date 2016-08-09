@@ -30,11 +30,11 @@ class IShallBeReleasedExtension {
 
     String releaseTagPrefix = DEFAULT_RELEASE_TAG_PREFIX
 
-    Boolean releaseProject = false
+    //Boolean releaseProject = false
 
-    Boolean githubRelease = false
+    //Boolean githubRelease = false
 
-    Boolean bintrayRelease = false
+    //Boolean bintrayRelease = false
 
     GitHub gitHub = null
 }

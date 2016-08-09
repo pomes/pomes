@@ -21,11 +21,6 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
         testCompile "org.spockframework:spock-core:$spockVersion"
     }
 
-    releaseme {
-        releaseProject = true
-        bintrayRelease = true
-    }
-
     publishing {
         publications {
             mavenLibrary(MavenPublication) {
@@ -120,10 +115,6 @@ project(':pomes-cli') {
         compile 'com.beust:jcommander:1.48'
         compile dependencyLogging
         compile 'org.yaml:snakeyaml:1.17'
-    }
-
-    releaseme {
-        githubRelease = true
     }
 
     task createDistributionDocs(dependsOn: ProjectInfoPlugin.GENERATE_PROJECT_INFO_TASK_NAME) {

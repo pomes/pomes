@@ -24,6 +24,8 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.kohsuke.github.GHRelease
+import org.kohsuke.github.GHReleaseBuilder
 import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHub
 
@@ -40,6 +42,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
     static final String CHECK_RELEASE_STATUS_TASK_NAME = 'checkReleaseStatus'
     static final String PERFORM_RELEASE_TASK_NAME = 'performRelease'
     static final String CONFIGURE_VERSION_FILE_TASK_NAME = 'configureVersionFile'
+    static final String PERFORM_GITHUB_RELEASE = 'performGitHubRelease'
 
     static final String DEFAULT_RELEASE_TAG_PREFIX = 'version-'
 
@@ -102,6 +105,7 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         addConfigureVersionFileTask(project, extension)
         addCheckReleaseStatusTask(project, extension)
         addPerformReleaseTask(project, extension)
+        addPerformGitHubReleaseTask(project, extension)
     }
 
     private void addCheckReleaseStatusTask(Project project, IShallBeReleasedExtension extension) {
@@ -279,8 +283,23 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         "$currentVersion".endsWith("$Snapshot.SNAPSHOT") ? "$currentVersion" - "-$Snapshot.SNAPSHOT" : "$releaseTagPrefix-${currentVersion.tokenize('-')[1] + 1}"
     }
 
-    /*GHRelease performGithubRelease(String repoName, String tag) {
-        GHRepository ghRepo = github.getRepository(repoName)
+    private void addPerformGitHubReleaseTask(Project project, IShallBeReleasedExtension extension) {
+        project.tasks.create(PERFORM_GITHUB_RELEASE) {
+            group = 'release'
+            description = 'Releases the application distribution to GitHub'
+            doLast {
+                project.allprojects.each { proj ->
+                    if (proj.pluginManager.hasPlugin('application')) {
+                        println proj.name
+                    }
+                }
+
+                //performGithubRelease(ghRepo)
+            }
+        }
+    }
+
+    static GHRelease performGithubRelease(GHRepository ghRepo, String tag) {
         GHReleaseBuilder releasePrep = new GHReleaseBuilder(ghRepo, tag)
                 .body("TODO: add release notes")
                 .draft(true)
@@ -291,5 +310,5 @@ class IShallBeReleasedPlugin implements Plugin<Project> {
         // release.uploadAsset()
         release.draft = false
         return release
-    }*/
+    }
 }
