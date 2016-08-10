@@ -6,6 +6,10 @@ import static com.github.pomes.gradle.projectinfo.ProjectInfoPlugin.determineMav
 import static org.gradle.api.plugins.BasePlugin.BUILD_GROUP
 import static org.gradle.api.plugins.JavaBasePlugin.CHECK_TASK_NAME
 
+subprojects {
+    apply plugin: 'groovy'
+}
+
 configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
     apply plugin: 'build-dashboard'
     apply plugin: 'project-report'

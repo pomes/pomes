@@ -1,13 +1,13 @@
-import com.github.pomes.gradle.releaseme.IShallBeReleasedPlugin
-import com.github.pomes.gradle.secrets.SecretsPlugin
-
 buildscript {
     repositories {
         jcenter()
+        mavenLocal()
     }
     dependencies {
         classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.1'
+        classpath 'com.github.pomes.gradle-plugins:props:0.0.1-SNAPSHOT'
+        classpath 'com.github.pomes.gradle-plugins:releaseme:0.0.1-SNAPSHOT'
     }
 }
 
@@ -16,10 +16,15 @@ plugins {
     id 'eclipse'
     id 'com.gradle.build-scan' version '1.0'
 }
-apply plugin: IShallBeReleasedPlugin
-apply plugin: SecretsPlugin
+
+apply plugin: 'com.github.pomes.props'
+apply plugin: 'com.github.pomes.releaseme'
 
 wrapper.gradleVersion = gradleVersion
+
+propertyFiles {
+    secrets {}
+}
 
 allprojects {
     repositories {
@@ -29,11 +34,6 @@ allprojects {
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
 }
-
-subprojects {
-    apply plugin: 'groovy'
-}
-apply from: "$rootProject.projectDir/gradle/groovy-projects.gradle"
 
 buildScan {
     licenseAgreementUrl = 'https://gradle.com/terms-of-service'
@@ -45,8 +45,10 @@ artifactory {
     publish {
         repository {
             repoKey = 'oss-snapshot-local'
-            username = rootProject.ext.secrets.bintrayUser
-            password = rootProject.ext.secrets.bintrayKey
+            username = rootProject.propertyFiles.secrets.properties.bintrayUser
+            password = rootProject.propertyFiles.secrets.properties.bintrayKey
         }
     }
 }
+
+//apply from: "$rootProject.projectDir/gradle/groovy-projects.gradle"
