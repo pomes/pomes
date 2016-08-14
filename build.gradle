@@ -4,7 +4,6 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath 'com.github.pomes.gradle-plugins:props:0.0.1-SNAPSHOT'
         classpath 'com.github.pomes.gradle-plugins:distextra:0.0.1-SNAPSHOT'
         classpath 'com.github.pomes.gradle-plugins:releaseme:0.0.1-SNAPSHOT'
     }
@@ -14,9 +13,9 @@ plugins {
     id 'idea'
     id 'eclipse'
     id 'com.gradle.build-scan' version '1.0'
+    id 'com.github.pomes.props' version '0.1.1'
 }
 
-apply plugin: 'com.github.pomes.props'
 apply plugin: 'com.github.pomes.releaseme'
 
 wrapper.gradleVersion = gradleVersion
@@ -41,8 +40,8 @@ artifactory {
     publish {
         repository {
             repoKey = 'oss-snapshot-local'
-            username = rootProject.propertyFiles.secrets.properties.bintrayUser
-            password = rootProject.propertyFiles.secrets.properties.bintrayKey
+            username = project.propertyFiles.secrets.properties.bintrayUser
+            password = project.propertyFiles.secrets.properties.bintrayKey
         }
     }
 }
