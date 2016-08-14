@@ -4,9 +4,8 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.1'
         classpath 'com.github.pomes.gradle-plugins:props:0.0.1-SNAPSHOT'
+        classpath 'com.github.pomes.gradle-plugins:distextra:0.0.1-SNAPSHOT'
         classpath 'com.github.pomes.gradle-plugins:releaseme:0.0.1-SNAPSHOT'
     }
 }
@@ -30,9 +29,6 @@ allprojects {
     repositories {
         jcenter()
     }
-    apply plugin: 'com.jfrog.artifactory'
-    apply plugin: 'maven-publish'
-    apply plugin: 'com.jfrog.bintray'
 }
 
 buildScan {
@@ -51,4 +47,60 @@ artifactory {
     }
 }
 
-//apply from: "$rootProject.projectDir/gradle/groovy-projects.gradle"
+subprojects {
+    apply plugin: 'groovy'
+    apply plugin: 'build-dashboard'
+    apply plugin: 'project-report'
+    apply plugin: 'jacoco'
+    apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
+    apply plugin: 'com.github.pomes.distextra'
+
+    sourceCompatibility = 1.8
+
+    dependencies {
+        compile "org.codehaus.groovy:groovy-all:$groovyVersion"
+        testCompile "org.spockframework:spock-core:$spockVersion"
+    }
+}
+
+project(':pomes-core') {
+    description = 'Core library for Pomes'
+
+    dependencies {
+        compile "org.eclipse.aether:aether-api:$aetherVersion"
+        compile "org.eclipse.aether:aether-util:$aetherVersion"
+        compile "org.eclipse.aether:aether-impl:$aetherVersion"
+        compile "org.eclipse.aether:aether-connector-basic:$aetherVersion"
+        compile "org.eclipse.aether:aether-transport-file:$aetherVersion"
+        compile "org.eclipse.aether:aether-transport-http:$aetherVersion"
+        compile "org.eclipse.aether:aether-transport-wagon:$aetherVersion"
+        compile 'org.apache.maven.wagon:wagon-ssh:1.0'
+        compile "org.apache.maven:maven-aether-provider:$mavenVersion"
+        compile "org.apache.maven:maven:$mavenVersion"
+        compile 'org.apache.maven:maven-project:2.2.1'
+
+        compile 'org.glassfish.jersey.core:jersey-client:2.22.1'
+        compile 'org.jsoup:jsoup:1.9.1'
+        compile dependencyLogging
+
+        testCompile 'co.freeside:betamax:1.1.2'
+    }
+}
+
+project(':pomes-util') {
+    description = 'Utility library for Pomes'
+}
+
+project(':pomes-cli') {
+    description = 'The command line tool for Pomes'
+
+    apply plugin: 'application'
+    mainClassName = 'com.github.pomes.cli.App'
+
+    dependencies {
+        compile project(':pomes-core')
+        compile 'com.beust:jcommander:1.48'
+        compile dependencyLogging
+        compile 'org.yaml:snakeyaml:1.17'
+    }
+}

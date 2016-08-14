@@ -6,24 +6,12 @@ import static com.github.pomes.gradle.projectinfo.ProjectInfoPlugin.determineMav
 import static org.gradle.api.plugins.BasePlugin.BUILD_GROUP
 import static org.gradle.api.plugins.JavaBasePlugin.CHECK_TASK_NAME
 
-subprojects {
-    apply plugin: 'groovy'
-}
+
 
 configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
-    apply plugin: 'build-dashboard'
-    apply plugin: 'project-report'
-    apply plugin: 'jacoco'
-    apply from: "$rootProject.projectDir/gradle/codenarc.gradle"
+
     apply plugin: DistDocsPlugin
     apply plugin: ProjectInfoPlugin
-
-    sourceCompatibility = 1.8
-
-    dependencies {
-        compile "org.codehaus.groovy:groovy-all:$groovyVersion"
-        testCompile "org.spockframework:spock-core:$spockVersion"
-    }
 
     publishing {
         publications {
@@ -68,13 +56,6 @@ configure(subprojects.findAll { it.plugins.hasPlugin('groovy') }) {
             task.dependsOn ProjectInfoPlugin.CONFIGURE_POM_TASK_NAME
         }
     }
-
-    task preReleaseGroovyChecks() {
-        group 'release'
-        dependsOn 'assemble'
-    }
-
-    rootProject.tasks.getByName('checkReleaseStatus').dependsOn preReleaseGroovyChecks
 
     //This seems to not push the released version properly - need to manually run after(?)
     //rootProject.tasks.getByName('performRelease').finalizedBy 'artifactoryPublish', 'bintrayUpload'
